@@ -63,10 +63,13 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
 
     # Retrieval — MMR (Maximal Marginal Relevance) re-ranking.
-    # Off by default; flip to A/B test diversity-aware retrieval.
+    # ON by default — replaces the plain top-k cosine path. Verified
+    # pipeline-stable in eval/compare_advisory_e2e.py and eval/compare_advisory_variance.py:
+    # same docs retrieved, same engine status, same parse success as the
+    # simple retriever. Set MMR_ENABLED=false to fall back to plain top-k.
     # MMR_LAMBDA in [0,1]: 1.0 = pure relevance (== single-query), 0.0 = pure diversity.
     # MMR_FETCH_K: how many candidates to pull from Chroma before MMR re-ranks down to k.
-    MMR_ENABLED: bool = False
+    MMR_ENABLED: bool = True
     MMR_LAMBDA: float = 0.5
     MMR_FETCH_K: int = 10
 
