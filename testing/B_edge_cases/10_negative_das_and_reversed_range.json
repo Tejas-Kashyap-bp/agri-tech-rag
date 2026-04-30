@@ -1,0 +1,29 @@
+{
+  "crop": "rice",
+  "doc_type": "stage_definition",
+  "total_season_days": 120,
+  "stages": [
+    {
+      "stage_code": "S0",
+      "stage_name": "Nursery",
+      "start_das": -7,
+      "end_das": 0,
+      "description": "Pre-transplant nursery phase, counted as negative DAS from transplanting date.",
+      "ndvi_trend": "rising",
+      "ndvi_range": { "min": 0.2, "max": 0.4 },
+      "ndvi_range_source": "Rice Handbook Ch.2",
+      "key_events": ["nursery sowing"]
+    },
+    {
+      "stage_code": "S1",
+      "stage_name": "Tillering",
+      "start_das": 60,
+      "end_das": 30,
+      "description": "NOTE: start_das > end_das — reversed range.",
+      "ndvi_trend": "rising",
+      "ndvi_range": { "min": 0.6, "max": 0.4 },
+      "ndvi_range_source": "Rice Handbook Ch.2",
+      "key_events": ["active tillering"]
+    }
+  ]
+}

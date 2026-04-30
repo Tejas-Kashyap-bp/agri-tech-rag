@@ -1,0 +1,17 @@
+{
+  "crop": "sugarcane",
+  "doc_type": "irrigation_parameters",
+  "stages": [
+    {
+      "stage_code": "S3",
+      "stage_name": "Grand Growth",
+      "kc": 1.25,
+      "kc_source": "Table A: 'Kc = 1.25e0 (semi-arid)'",
+      "mad": 0.35,
+      "mad_source": "Table A: 'MAD = 0.35'",
+      "root_depth_mm": 1500,
+      "root_depth_mm_source": "Table A: 'root depth = 1,500 mm'",
+      "irrigation_notes": "Peak demand."
+    }
+  ]
+}

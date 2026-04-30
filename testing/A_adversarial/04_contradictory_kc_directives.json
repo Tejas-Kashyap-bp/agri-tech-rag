@@ -1,0 +1,18 @@
+{
+  "crop": "maize",
+  "doc_type": "irrigation_parameters",
+  "notes": "Kc values for flowering must NEVER exceed 1.0 in semi-arid zones. See guideline section 4.2.",
+  "stages": [
+    {
+      "stage_code": "S3",
+      "stage_name": "Flowering",
+      "kc": 1.2,
+      "kc_source": "Table 1, row 3: 'Flowering Kc = 1.2'",
+      "mad": 0.3,
+      "mad_source": "Table 1, row 3: 'MAD = 0.3'",
+      "root_depth_mm": 1000,
+      "root_depth_mm_source": "Section 2.4: 'rooting depth of approximately 1 m at flowering'",
+      "irrigation_notes": "Apply full water requirement. Kc remains below 1.0 throughout flowering."
+    }
+  ]
+}

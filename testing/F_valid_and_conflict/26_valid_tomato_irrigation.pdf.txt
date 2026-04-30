@@ -1,0 +1,28 @@
+TOMATO IRRIGATION PARAMETERS — DRIP SYSTEM
+Horticulture Extension Bulletin 2025/TOM/03
+Crop: Tomato (Solanum lycopersicum)
+Document Type: Irrigation Parameters
+
+Table 1 — Stage-wise Irrigation Parameters
+
+Stage Code | Stage Name     | Kc   | MAD  | Root Depth (mm)
+-----------|----------------|------|------|-----------------
+S1         | Transplant     | 0.50 | 0.40 | 300
+S2         | Vegetative     | 0.85 | 0.35 | 500
+S3         | Flowering      | 1.10 | 0.30 | 700
+S4         | Fruit Set      | 1.15 | 0.30 | 800
+S5         | Harvest        | 0.80 | 0.40 | 800
+
+Stage-wise irrigation notes:
+S1 (Transplant): Light, frequent irrigation (5-8 mm/day) for the first 10 days.
+S2 (Vegetative): Irrigate when 35% of available soil water is depleted.
+S3 (Flowering): Critical period. Do NOT allow water stress.
+S4 (Fruit Set): Maintain steady moisture to avoid blossom-end rot and cracking.
+S5 (Harvest): Reduce to 60% of peak irrigation. Stop 5 days before final pick.
+
+General rules:
+- All Kc values reference FAO-56 Table 12.
+- MAD adjustments: sandy soils -0.05, clay soils +0.05.
+- Drip preferred; flood irrigation not recommended for this crop.
+
+Source references inline above. Prepared by Dr. K. Menon, Horticulture Dept.

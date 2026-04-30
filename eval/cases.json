@@ -1,0 +1,47 @@
+{
+  "_comment": "Tiny Phase 1 retrieval eval. Each case asserts that retrieve(crop, engine) returns AT LEAST the listed expected_doc_keys. Expand later — do NOT delete entries when expanding, only add. Audit notes that drop in coverage between runs are a regression signal.",
+  "cases": [
+    {
+      "id": "maize_stage",
+      "crop": "maize",
+      "engine": "e1_stage",
+      "expected_doc_keys": ["maize_stage_definition"]
+    },
+    {
+      "id": "maize_irrigation",
+      "crop": "maize",
+      "engine": "e2_irrigation",
+      "expected_doc_keys": ["maize_irrigation_parameters"]
+    },
+    {
+      "id": "maize_nutrition",
+      "crop": "maize",
+      "engine": "e3_nutrition",
+      "expected_doc_keys": ["maize_fertigation_schedule"]
+    },
+    {
+      "id": "maize_crop_health",
+      "crop": "maize",
+      "engine": "e4_crop_health",
+      "expected_doc_keys": ["maize_ipm_schedule"]
+    },
+    {
+      "id": "maize_yield",
+      "crop": "maize",
+      "engine": "e5_yield",
+      "expected_doc_keys": ["maize_yield_parameters"]
+    },
+    {
+      "id": "sugarcane_stage",
+      "crop": "sugarcane",
+      "engine": "e1_stage",
+      "expected_doc_keys": ["sugarcane_stage_definition"]
+    },
+    {
+      "id": "wheat_stage_unknown",
+      "crop": "wheat",
+      "engine": "e1_stage",
+      "expected_doc_keys": []
+    }
+  ]
+}

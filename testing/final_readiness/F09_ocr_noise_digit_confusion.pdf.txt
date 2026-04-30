@@ -1,0 +1,15 @@
+WHEAT STAGE DEFINITIONS (scanned bulletin, OCR'd)
+
+Stage 1  CRI            DAS 0 - 2l         NDVl 0.2 - 0.4
+Stage 2  Tillering      DAS 22 - 55        NDVI O.4 - 0.7
+Stage 3  Booting        DAS 56 - 9O        NDVI 0.7 - O.85
+Stage 4  Grain filling  DAS 91 -l25        NDVI 0.6 - 0.80
+Stage 5  Maturity       DAS l26 - l40      NDVI 0.3 - 0.6O
+
+Key_events stage 1: CRI, cr0wn root initiation
+Key_events stage 2: tillering, active til1ering
+Key_events stage 3: booting, heading
+
+(OCR substitutions present:
+  0 -> O,  O -> 0,  1 -> l,  l -> 1.
+This is what the raw extracted text actually looks like.)

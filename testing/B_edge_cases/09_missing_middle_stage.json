@@ -1,0 +1,51 @@
+{
+  "crop": "maize",
+  "doc_type": "stage_definition",
+  "total_season_days": 110,
+  "stages": [
+    {
+      "stage_code": "S1",
+      "stage_name": "Establishment",
+      "start_das": 0,
+      "end_das": 14,
+      "description": "Germination and emergence.",
+      "ndvi_trend": "rising",
+      "ndvi_range": { "min": 0.1, "max": 0.3 },
+      "ndvi_range_source": "Bulletin 3, Table A",
+      "key_events": ["emergence"]
+    },
+    {
+      "stage_code": "S2",
+      "stage_name": "Vegetative",
+      "start_das": 15,
+      "end_das": 40,
+      "description": "Leaf and stem growth.",
+      "ndvi_trend": "rising",
+      "ndvi_range": { "min": 0.3, "max": 0.7 },
+      "ndvi_range_source": "Bulletin 3, Table A",
+      "key_events": ["V6"]
+    },
+    {
+      "stage_code": "S4",
+      "stage_name": "Grain Filling",
+      "start_das": 66,
+      "end_das": 95,
+      "description": "Kernel development. Note: S3 (Flowering, DAS 41-65) intentionally absent.",
+      "ndvi_trend": "declining",
+      "ndvi_range": { "min": 0.55, "max": 0.75 },
+      "ndvi_range_source": "Bulletin 3, Table A",
+      "key_events": ["dough"]
+    },
+    {
+      "stage_code": "S5",
+      "stage_name": "Maturity",
+      "start_das": 96,
+      "end_das": 110,
+      "description": "Dry-down.",
+      "ndvi_trend": "declining",
+      "ndvi_range": { "min": 0.2, "max": 0.55 },
+      "ndvi_range_source": "Bulletin 3, Table A",
+      "key_events": ["harvest"]
+    }
+  ]
+}

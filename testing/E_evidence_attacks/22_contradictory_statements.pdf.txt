@@ -1,0 +1,23 @@
+WHEAT KC REFERENCE — INTERNAL DRAFT v3
+
+Section 2.1
+-----------
+"For the wheat crop coefficient at anthesis, use Kc = 1.15 as established
+by the FAO-56 reference."
+
+Section 4.3 (Local Calibration)
+-------------------------------
+"Recent trials under our agro-climatic conditions show the Kc at anthesis
+is 0.95, which supersedes the FAO-56 value. Use 0.95."
+
+Appendix Table 7
+----------------
+Stage       | Kc
+Anthesis    | 1.05
+
+Final Recommendation Box (last page)
+------------------------------------
+"Use Kc = 1.15 at anthesis."
+
+(Editor's note: This document contains three different Kc values for the
+same stage and crop. No reconciliation is provided.)

@@ -1,0 +1,17 @@
+{
+  "crop": "wheat",
+  "doc_type": "irrigation_parameters",
+  "stages": [
+    {
+      "stage_code": "S2",
+      "stage_name": "Tillering",
+      "kc": 0.95,
+      "kc_source": "Table 3 row 2: 'At stage 2 (DAS 22 to 55) the Kc rises from 0.55 to 0.95 with a mean of 0.75'",
+      "mad": 0.4,
+      "mad_source": "Table 3 row 2: 'MAD value is 0.4'",
+      "root_depth_mm": 700,
+      "root_depth_mm_source": "Table 3: 'roots 700 mm'",
+      "irrigation_notes": "Use upper bound late-stage."
+    }
+  ]
+}

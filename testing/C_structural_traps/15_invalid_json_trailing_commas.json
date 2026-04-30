@@ -1,0 +1,20 @@
+{
+  "crop": "maize",
+  "doc_type": "irrigation_parameters",
+  "stages": [
+    {
+      "stage_code": "S1",
+      "stage_name": "Establishment",
+      "kc": 0.4,
+      "mad": 0.5,
+      "root_depth_mm": 300,
+    },
+    {
+      "stage_code": "S2",
+      "stage_name": "Vegetative",
+      "kc": 0.8,
+      "mad": 0.4,
+      "root_depth_mm": 600,
+    },
+  ],
+}

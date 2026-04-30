@@ -1,0 +1,18 @@
+{
+  "crop": "maize",
+  "doc_type": "irrigation_parameters",
+  "_raw_text_for_testing": "raw text the document is 'table 1 row 1: kc at establishment is 0.4'",
+  "stages": [
+    {
+      "stage_code": "S1",
+      "stage_name": "Establishment",
+      "kc": 0.4,
+      "kc_source": "Table 1 Row 1: Kc at establishment is 0.4",
+      "mad": 0.5,
+      "mad_source": "Table 1 Row 1: MAD is 0.5",
+      "root_depth_mm": 300,
+      "root_depth_mm_source": "Table 1 Row 1: root depth 300 mm",
+      "irrigation_notes": "Frequent light."
+    }
+  ]
+}

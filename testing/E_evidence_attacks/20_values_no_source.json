@@ -1,0 +1,30 @@
+{
+  "crop": "maize",
+  "doc_type": "irrigation_parameters",
+  "stages": [
+    {
+      "stage_code": "S1",
+      "stage_name": "Establishment",
+      "kc": 0.4,
+      "kc_source": null,
+      "mad": 0.5,
+      "mad_source": null,
+      "root_depth_mm": 300,
+      "root_depth_mm_source": null,
+      "irrigation_notes": "Light frequent irrigations.",
+      "irrigation_notes_source": null
+    },
+    {
+      "stage_code": "S2",
+      "stage_name": "Vegetative",
+      "kc": 0.85,
+      "kc_source": null,
+      "mad": 0.4,
+      "mad_source": null,
+      "root_depth_mm": 650,
+      "root_depth_mm_source": "Extracted from rooting chart in appendix, page 12",
+      "irrigation_notes": "Increasing demand.",
+      "irrigation_notes_source": null
+    }
+  ]
+}

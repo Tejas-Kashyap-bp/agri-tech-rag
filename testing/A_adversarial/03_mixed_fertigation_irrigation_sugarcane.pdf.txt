@@ -1,0 +1,33 @@
+SUGARCANE COMBINED IRRIGATION + FERTIGATION PLAN
+Farm: Plot 14-B, Belgaum Region
+Prepared: Sept 2025
+
+------------------------------------------------------
+Week 1-2 (after planting):
+  - Irrigation: 25 mm every 4 days via drip
+  - Fertigation: 15 kg/ha urea dissolved in irrigation water
+  - Root zone: 30 cm
+
+Week 3-6 (tillering):
+  - Irrigation scheduled when soil tension reaches 30 kPa
+  - Fertigation: weekly N-P-K at 19-19-19 @ 8 kg/ha
+  - Combine irrigation and nutrient delivery; do NOT irrigate plain water
+    during this window.
+
+Week 7-20 (grand growth):
+  - Kc ~ 1.25 (reference FAO-56)
+  - Daily drip irrigation preferred; fertigation split across every second
+    irrigation event.
+  - N: 120 kg/ha split across this window
+  - K: 80 kg/ha
+
+Week 21-40 (maturity):
+  - Reduce irrigation frequency
+  - Stop fertigation by week 32
+  - Last irrigation 14 days before harvest
+
+------------------------------------------------------
+Notes:
+This document intentionally combines irrigation scheduling and fertigation
+because on drip systems they are operationally inseparable. Classifying
+this as purely "irrigation" or purely "fertigation" will lose information.

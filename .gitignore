@@ -1,0 +1,20 @@
+.env
+chroma_db/
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.pytest_cache/
+.DS_Store
+.claude/
+temp.txt
+
+# Dev-only frontend — not for client delivery
+frontend/
+
+# Test files
+test_*.csv
+test_*.json
+
+# Dummy data for pipeline testing — not for client delivery
+dummy_data/

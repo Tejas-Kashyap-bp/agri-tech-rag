@@ -1,0 +1,18 @@
+COMMON IRRIGATION SCHEDULE — KHARIF CEREALS
+State Horticulture & Agronomy Board
+
+This schedule applies to commonly grown kharif cereals in the region.
+Farmers may adapt the schedule based on local conditions and specific
+crop planted.
+
+Week 1-2:   2 irrigations of 25 mm each
+Week 3-6:   1 irrigation per 5 days, 35 mm each
+Week 7-10:  1 irrigation per 4 days, 40 mm each (peak water demand)
+Week 11-14: 1 irrigation per 7 days, 30 mm each
+Week 15+:   Stop irrigation 10 days before harvest
+
+Applicable to: all cereal crops in the kharif rotation including but not
+limited to coarse grains and staple cereals.
+
+Note: This schedule is intentionally crop-agnostic. See crop-specific
+bulletins for Kc values and stage-wise refinements.

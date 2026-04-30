@@ -1,0 +1,16 @@
+MAIZE STAGE DEFINITIONS — REFORMATTED BULLETIN
+
+Stage 1  Establishment    DAS 0–14     NDVI 0·1 to 0·3
+Stage 2  Vegetative       DAS 15–40    NDVI 0·3 to 0·7
+Stage 3  Flowering        DAS 41–65    NDVI 0·7 to 0·85
+Stage 4  Grain Filling    DAS 66–95    NDVI 0·55 to 0·75
+Stage 5  Maturity         DAS 96–110   NDVI 0·2 to 0·55
+
+Notes:
+• DAS separator is an en-dash (–), not a hyphen-minus (-).
+• Decimals use middle-dot (·), not period (.).
+• Bullet uses U+2022 (•).
+
+These are common typographic substitutions in professionally typeset
+PDFs and can cause regex-based extractors to miss numbers entirely,
+while the LLM will happily normalize them.

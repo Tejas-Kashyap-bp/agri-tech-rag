@@ -1,0 +1,73 @@
+{
+  "crop": "maize",
+  "doc_type": "stage_definition",
+  "total_season_days": 115,
+  "_note": "doc_key = maize_stage_definition already exists (see dummy_data/maize/maize_stage_definition.json with total_season_days=110). This ingestion should trigger a VERSION_CONFLICT requiring user confirmation.",
+  "stages": [
+    {
+      "stage_code": "S1",
+      "stage_name": "Establishment",
+      "start_das": 0,
+      "end_das": 14,
+      "description": "Germination and seedling emergence.",
+      "description_source": "Revised Bulletin v2, p.4",
+      "ndvi_trend": "rising",
+      "ndvi_range": { "min": 0.12, "max": 0.32 },
+      "ndvi_range_source": "Revised Bulletin v2, Table 1",
+      "key_events": ["germination", "emergence"],
+      "key_events_source": "Revised Bulletin v2, p.4"
+    },
+    {
+      "stage_code": "S2",
+      "stage_name": "Vegetative",
+      "start_das": 15,
+      "end_das": 42,
+      "description": "Leaf and stem growth. Slightly extended vs previous version.",
+      "description_source": "Revised Bulletin v2, p.5",
+      "ndvi_trend": "rising",
+      "ndvi_range": { "min": 0.32, "max": 0.72 },
+      "ndvi_range_source": "Revised Bulletin v2, Table 1",
+      "key_events": ["V6", "V10"],
+      "key_events_source": "Revised Bulletin v2, p.5"
+    },
+    {
+      "stage_code": "S3",
+      "stage_name": "Flowering",
+      "start_das": 43,
+      "end_das": 68,
+      "description": "Tasseling, silking, pollination.",
+      "description_source": "Revised Bulletin v2, p.6",
+      "ndvi_trend": "plateau",
+      "ndvi_range": { "min": 0.72, "max": 0.87 },
+      "ndvi_range_source": "Revised Bulletin v2, Table 1",
+      "key_events": ["tasseling", "silking", "pollination"],
+      "key_events_source": "Revised Bulletin v2, p.6"
+    },
+    {
+      "stage_code": "S4",
+      "stage_name": "Grain Filling",
+      "start_das": 69,
+      "end_das": 98,
+      "description": "Kernel development.",
+      "description_source": "Revised Bulletin v2, p.7",
+      "ndvi_trend": "declining",
+      "ndvi_range": { "min": 0.55, "max": 0.78 },
+      "ndvi_range_source": "Revised Bulletin v2, Table 1",
+      "key_events": ["blister", "milk", "dough", "dent"],
+      "key_events_source": "Revised Bulletin v2, p.7"
+    },
+    {
+      "stage_code": "S5",
+      "stage_name": "Maturity",
+      "start_das": 99,
+      "end_das": 115,
+      "description": "Black layer, dry-down, harvest.",
+      "description_source": "Revised Bulletin v2, p.8",
+      "ndvi_trend": "declining",
+      "ndvi_range": { "min": 0.2, "max": 0.55 },
+      "ndvi_range_source": "Revised Bulletin v2, Table 1",
+      "key_events": ["black layer", "physiological maturity", "harvest"],
+      "key_events_source": "Revised Bulletin v2, p.8"
+    }
+  ]
+}

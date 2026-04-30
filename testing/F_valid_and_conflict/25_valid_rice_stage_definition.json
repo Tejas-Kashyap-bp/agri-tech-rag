@@ -1,0 +1,72 @@
+{
+  "crop": "rice",
+  "doc_type": "stage_definition",
+  "total_season_days": 120,
+  "stages": [
+    {
+      "stage_code": "S1",
+      "stage_name": "Establishment",
+      "start_das": 0,
+      "end_das": 15,
+      "description": "Post-transplant recovery and initial root growth.",
+      "description_source": "Rice Handbook Ch.3, p.18: 'the establishment phase covers days 0 to 15 after transplanting'",
+      "ndvi_trend": "rising",
+      "ndvi_range": { "min": 0.25, "max": 0.4 },
+      "ndvi_range_source": "Rice Handbook Ch.3, Table 3.1",
+      "key_events": ["transplant recovery"],
+      "key_events_source": "Rice Handbook Ch.3, p.18"
+    },
+    {
+      "stage_code": "S2",
+      "stage_name": "Tillering",
+      "start_das": 16,
+      "end_das": 45,
+      "description": "Active and maximum tillering.",
+      "description_source": "Rice Handbook Ch.3, p.19",
+      "ndvi_trend": "rising",
+      "ndvi_range": { "min": 0.4, "max": 0.75 },
+      "ndvi_range_source": "Rice Handbook Ch.3, Table 3.1",
+      "key_events": ["active tillering", "maximum tillering"],
+      "key_events_source": "Rice Handbook Ch.3, p.19"
+    },
+    {
+      "stage_code": "S3",
+      "stage_name": "Panicle Initiation",
+      "start_das": 46,
+      "end_das": 75,
+      "description": "Panicle initiation through booting.",
+      "description_source": "Rice Handbook Ch.3, p.21",
+      "ndvi_trend": "plateau",
+      "ndvi_range": { "min": 0.75, "max": 0.88 },
+      "ndvi_range_source": "Rice Handbook Ch.3, Table 3.1",
+      "key_events": ["panicle initiation", "booting"],
+      "key_events_source": "Rice Handbook Ch.3, p.21"
+    },
+    {
+      "stage_code": "S4",
+      "stage_name": "Flowering",
+      "start_das": 76,
+      "end_das": 95,
+      "description": "Heading, anthesis, and grain filling start.",
+      "description_source": "Rice Handbook Ch.3, p.23",
+      "ndvi_trend": "declining",
+      "ndvi_range": { "min": 0.6, "max": 0.8 },
+      "ndvi_range_source": "Rice Handbook Ch.3, Table 3.1",
+      "key_events": ["heading", "anthesis"],
+      "key_events_source": "Rice Handbook Ch.3, p.23"
+    },
+    {
+      "stage_code": "S5",
+      "stage_name": "Maturity",
+      "start_das": 96,
+      "end_das": 120,
+      "description": "Grain filling and ripening.",
+      "description_source": "Rice Handbook Ch.3, p.25",
+      "ndvi_trend": "declining",
+      "ndvi_range": { "min": 0.3, "max": 0.6 },
+      "ndvi_range_source": "Rice Handbook Ch.3, Table 3.1",
+      "key_events": ["dough", "physiological maturity", "harvest"],
+      "key_events_source": "Rice Handbook Ch.3, p.25"
+    }
+  ]
+}

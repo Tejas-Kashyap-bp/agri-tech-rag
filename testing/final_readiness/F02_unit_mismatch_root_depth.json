@@ -1,0 +1,17 @@
+{
+  "crop": "wheat",
+  "doc_type": "irrigation_parameters",
+  "stages": [
+    {
+      "stage_code": "S3",
+      "stage_name": "Booting",
+      "kc": 1.15,
+      "kc_source": "Table 4: 'Kc booting = 1.15'",
+      "mad": 0.35,
+      "mad_source": "Table 4: 'MAD = 0.35'",
+      "root_depth_mm": 1200,
+      "root_depth_mm_source": "Table 4: 'rooting depth 120 cm'",
+      "irrigation_notes": "Standard."
+    }
+  ]
+}

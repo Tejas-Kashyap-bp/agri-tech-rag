@@ -1,0 +1,22 @@
+MAIZE IRRIGATION TABLE (multi-column layout with irregular whitespace)
+
+Stage          Kc     MAD    Root (mm)
+Establishment  0.4    0.5    300
+Vegetative     0.8    0.4    600
+Flowering      1.2    0.3    1000
+Grain Fill     1.0    0.4    1200
+Maturity       0.6    0.6    1200
+
+Notes: all Kc values from Table    1   row-wise. Extra spaces
+between words are common in the original PDF due to column alignment.
+
+Source:
+Table 1 row 1 Kc establishment = 0.4
+Table 1 row 2 Kc vegetative = 0.8
+Table 1 row 3 Kc flowering = 1.2
+Table 1 row 4 Kc grain fill = 1.0
+Table 1 row 5 Kc maturity = 0.6
+
+(Note: the extractor may quote a source as 'Table 1 row 1 Kc establishment = 0.4'
+but in the raw text a PDF reader may have rendered this with double or
+non-breaking spaces e.g. 'Table 1  row 1  Kc establishment  = 0.4'.)

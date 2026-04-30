@@ -1,0 +1,6 @@
+crop,doc_type,stage_code,stage_name,das_start,das_end,N_kg_per_ha,P_kg_per_ha,K_kg_per_ha,source
+wheat,fertigation_schedule,S1,CRI,0,21,25,15,0,"Bulletin 2025/WHT/09 Table 2 row 1"
+wheat,fertigation_schedule,S2,Tillering,22,55,50,10,20,"Bulletin 2025/WHT/09 Table 2 row 2"
+wheat,fertigation_schedule,S3,Booting,56,90,30,0,20,"Bulletin 2025/WHT/09 Table 2 row 3"
+wheat,fertigation_schedule,S4,Grain Filling,91,125,15,0,10,"Bulletin 2025/WHT/09 Table 2 row 4"
+wheat,fertigation_schedule,S5,Maturity,126,140,0,0,0,"Bulletin 2025/WHT/09 Table 2 row 5"

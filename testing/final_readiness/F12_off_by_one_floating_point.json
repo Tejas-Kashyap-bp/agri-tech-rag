@@ -1,0 +1,33 @@
+{
+  "crop": "tomato",
+  "doc_type": "stage_definition",
+  "total_season_days": 140,
+  "stages": [
+    {
+      "stage_code": "S1",
+      "stage_name": "Transplant",
+      "start_das": 0,
+      "end_das": 10,
+      "description": "Transplant recovery.",
+      "description_source": "Tomato Handbook p.3",
+      "ndvi_trend": "rising",
+      "ndvi_range": { "min": 0.2, "max": 0.30000000000000004 },
+      "ndvi_range_source": "Tomato Handbook p.3: 'NDVI rises from 0.2 to 0.3 during transplant recovery'",
+      "key_events": ["transplant"],
+      "key_events_source": "Tomato Handbook p.3"
+    },
+    {
+      "stage_code": "S2",
+      "stage_name": "Vegetative",
+      "start_das": 11,
+      "end_das": 35,
+      "description": "Vegetative growth.",
+      "description_source": "Tomato Handbook p.4",
+      "ndvi_trend": "rising",
+      "ndvi_range": { "min": 0.3, "max": 0.65 },
+      "ndvi_range_source": "Tomato Handbook p.4: 'NDVI 0.3 to 0.65'",
+      "key_events": ["branching"],
+      "key_events_source": "Tomato Handbook p.4"
+    }
+  ]
+}

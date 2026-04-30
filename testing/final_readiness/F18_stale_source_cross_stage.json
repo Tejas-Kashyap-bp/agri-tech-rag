@@ -1,0 +1,18 @@
+{
+  "crop": "wheat",
+  "doc_type": "irrigation_parameters",
+  "_raw_text_for_testing": "Stage 1 CRI Kc is 0.4. Stage 2 tillering Kc is 0.7. Stage 3 booting Kc is 1.15. Stage 4 grain filling Kc is 0.9.",
+  "stages": [
+    {
+      "stage_code": "S2",
+      "stage_name": "Tillering",
+      "kc": 0.7,
+      "kc_source": "Stage 3 booting Kc is 1.15",
+      "mad": 0.4,
+      "mad_source": "Stage 2 tillering Kc is 0.7",
+      "root_depth_mm": 600,
+      "root_depth_mm_source": "Stage 2 tillering Kc is 0.7",
+      "irrigation_notes": "Standard."
+    }
+  ]
+}

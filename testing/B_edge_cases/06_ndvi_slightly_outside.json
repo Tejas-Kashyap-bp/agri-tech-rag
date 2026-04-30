@@ -1,0 +1,29 @@
+{
+  "crop": "wheat",
+  "doc_type": "stage_definition",
+  "total_season_days": 140,
+  "stages": [
+    {
+      "stage_code": "S1",
+      "stage_name": "Bare soil",
+      "start_das": 0,
+      "end_das": 10,
+      "description": "Dry, freshly tilled soil.",
+      "ndvi_trend": "flat",
+      "ndvi_range": { "min": -1.0001, "max": -0.2 },
+      "ndvi_range_source": "Sensor calibration report, page 3",
+      "key_events": ["sowing"]
+    },
+    {
+      "stage_code": "S2",
+      "stage_name": "Canopy peak",
+      "start_das": 11,
+      "end_das": 140,
+      "description": "Canopy full.",
+      "ndvi_trend": "plateau",
+      "ndvi_range": { "min": 0.7, "max": 1.0001 },
+      "ndvi_range_source": "Sensor calibration report, page 3",
+      "key_events": ["grain fill"]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+COMPARATIVE FERTIGATION GUIDE — CEREAL CROPS
+Punjab Agricultural University, 2025
+
+This bulletin covers BOTH maize and wheat fertigation programs because
+farmers in this zone typically rotate the two crops and use the same
+drip-fertigation infrastructure.
+
+MAIZE (Kharif)
+---------------
+Stage 1 (0-14 DAS): N 20 kg/ha, applied via fertigation in 3 splits
+Stage 2 (15-40 DAS): N 60 kg/ha, K 30 kg/ha
+Stage 3 (41-65 DAS): N 40 kg/ha, K 40 kg/ha, P 20 kg/ha
+Stage 4 (66-95 DAS): K 30 kg/ha only
+
+WHEAT (Rabi)
+-------------
+Stage 1 (0-21 DAS): N 25 kg/ha in 2 splits during CRI
+Stage 2 (22-55 DAS): N 50 kg/ha during tillering
+Stage 3 (56-90 DAS): N 30 kg/ha, K 20 kg/ha during booting
+Stage 4 (91-140 DAS): none
+
+Common recommendations for BOTH crops:
+- Use water-soluble fertilizers
+- Avoid fertigation in the 10 days preceding harvest
+- Flush drip lines with plain water after every fertigation event

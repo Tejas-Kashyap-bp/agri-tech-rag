@@ -1,0 +1,22 @@
+MAIZE IRRIGATION PHILOSOPHY — EXTENSION NOTE
+
+This note deliberately avoids publishing specific Kc, MAD, or root depth
+figures. Instead it describes the shape of water demand across the season
+so that farmers develop intuition rather than rely on table lookups.
+
+Establishment: water demand is a small fraction of peak. The crop is not
+yet transpiring much; use just enough water to keep seedbed moist.
+
+Vegetative: demand ramps up. Roughly doubles from establishment by mid-
+vegetative stage. Soil moisture allowed to drop moderately before re-watering.
+
+Flowering: the season peaks here. Water stress at this stage is catastrophic
+for yield. Do not allow even mild depletion.
+
+Grain filling: demand begins to taper but remains substantial.
+
+Maturity: demand drops to near establishment levels. Water can be withheld
+entirely in the final two weeks.
+
+(Specific numerical parameters intentionally omitted to avoid calcifying
+practice around a single reference table. Values implied by the narrative.)

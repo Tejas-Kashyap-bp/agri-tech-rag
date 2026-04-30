@@ -1,0 +1,30 @@
+{
+  "crop": "",
+  "doc_type": "irrigation_parameters",
+  "notes": "",
+  "stages": [
+    {
+      "stage_code": "S1",
+      "stage_name": "",
+      "kc": 0.4,
+      "kc_source": "",
+      "mad": null,
+      "mad_source": null,
+      "root_depth_mm": "",
+      "root_depth_mm_source": null,
+      "irrigation_notes": ""
+    },
+    {
+      "stage_code": "S2",
+      "stage_name": "Vegetative",
+      "kc": null,
+      "kc_source": "Table 2 row 1 says Kc = 0.8",
+      "mad": 0.4,
+      "mad_source": null,
+      "root_depth_mm": 600,
+      "root_depth_mm_source": "",
+      "irrigation_notes": ""
+    }
+  ],
+  "general_rules": ["", "  ", null]
+}

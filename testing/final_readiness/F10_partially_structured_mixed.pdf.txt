@@ -1,0 +1,26 @@
+SUGARCANE SEASONAL IRRIGATION GUIDE
+
+Stage 1 (DAS 0-30, Germination & Establishment):
+  Kc = 0.4
+  MAD = 0.5
+  Root depth = 300 mm
+  Notes: ensure uniform moisture; irrigate every 4-5 days.
+
+Stage 2 (DAS 31-120, Tillering):
+  Kc is moderate and increasing with canopy closure
+  MAD should be kept tight due to active growth
+  Root depth extends significantly during this phase
+  Notes: irrigate when soil tension reaches 25 kPa
+
+Stage 3 (DAS 121-270, Grand Growth):
+  Kc = 1.25
+  MAD = 0.35
+  Root depth = 1500 mm
+  Notes: peak water demand; do not skip any scheduled irrigation
+
+Stage 4 (DAS 271-365, Maturity):
+  Kc declines toward harvest
+  Stop irrigation 14 days before harvest
+  Root depth = 1500 mm
+
+(Stages 1, 3 have numerical values; stages 2, 4 describe behavior qualitatively.)

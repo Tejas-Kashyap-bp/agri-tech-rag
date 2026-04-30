@@ -1,0 +1,28 @@
+{
+  "crop": "maize",
+  "doc_type": "irrigation_parameters",
+  "stages": [
+    {
+      "stage_code": "S1",
+      "stage_name": "Establishment",
+      "kc": "0.4",
+      "kc_source": "Table 1",
+      "mad": "fifty percent",
+      "mad_source": "Table 1",
+      "root_depth_mm": "300mm",
+      "root_depth_mm_source": "Table 1",
+      "irrigation_notes": ["light", "frequent"]
+    },
+    {
+      "stage_code": 2,
+      "stage_name": "Vegetative",
+      "kc": 0.8,
+      "kc_source": "Table 1",
+      "mad": 0.4,
+      "mad_source": "Table 1",
+      "root_depth_mm": 600.7,
+      "root_depth_mm_source": "Table 1",
+      "irrigation_notes": "Standard schedule."
+    }
+  ]
+}

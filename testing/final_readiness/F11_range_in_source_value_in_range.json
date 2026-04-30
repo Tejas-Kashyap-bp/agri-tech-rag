@@ -1,0 +1,17 @@
+{
+  "crop": "maize",
+  "doc_type": "irrigation_parameters",
+  "stages": [
+    {
+      "stage_code": "S2",
+      "stage_name": "Vegetative",
+      "kc": 0.7,
+      "kc_source": "Table 1: 'Kc during vegetative stage ranges from 0.6 to 0.9 depending on cultivar'",
+      "mad": 0.4,
+      "mad_source": "Table 1: 'MAD 0.4'",
+      "root_depth_mm": 600,
+      "root_depth_mm_source": "Table 1: 'root depth 600 mm'",
+      "irrigation_notes": "Steady schedule."
+    }
+  ]
+}

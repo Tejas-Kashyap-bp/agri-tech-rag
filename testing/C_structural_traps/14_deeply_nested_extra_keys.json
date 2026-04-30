@@ -1,0 +1,42 @@
+{
+  "crop": "maize",
+  "doc_type": "stage_definition",
+  "metadata": {
+    "publisher": {
+      "institution": {
+        "name": "ICAR",
+        "department": {
+          "code": "AGRO",
+          "sub_unit": { "id": 42 }
+        }
+      }
+    }
+  },
+  "total_season_days": 110,
+  "stages": [
+    {
+      "stage_code": "S1",
+      "stage_name": "Establishment",
+      "start_das": 0,
+      "end_das": 14,
+      "description": "Germination.",
+      "ndvi_trend": "rising",
+      "ndvi_range": {
+        "min": 0.1,
+        "max": 0.3,
+        "unit": "index",
+        "confidence": { "lower": 0.08, "upper": 0.32 }
+      },
+      "ndvi_range_source": "Table 1",
+      "extra_unexpected_field": "this shouldn't exist",
+      "key_events": ["emergence"],
+      "sub_sub_stages": [
+        {
+          "code": "S1a",
+          "name": "imbibition",
+          "internal": { "hidden": true }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "crop": "tomato",
+  "doc_type": "irrigation_parameters",
+  "stages": [
+    {
+      "stage_code": "S2",
+      "stage_name": "Vegetative",
+      "kc": 0.8,
+      "kc_source": "Table 2: 'Kc vegetative = 0.80'",
+      "mad": 0.4,
+      "mad_source": "Table 2: 'MAD = 0.40'",
+      "root_depth_mm": 500,
+      "root_depth_mm_source": "Table 2: 'root depth 500 mm'",
+      "irrigation_notes": "Moderate demand."
+    }
+  ]
+}

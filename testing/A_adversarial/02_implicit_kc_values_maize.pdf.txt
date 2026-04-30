@@ -1,0 +1,23 @@
+MAIZE CROP COEFFICIENT NOTES (Kc)
+
+Table 1 — Kc Profile
+
+Stage          | Relative Kc
+---------------|------------
+Establishment  | low
+Vegetative     | rising
+Flowering      | peak
+Grain filling  | slightly below peak
+Maturity       | declining to minimal
+
+Interpretation guidelines:
+- "low" = baseline water demand
+- "peak" = maximum seasonal demand
+- Use the shape of the curve rather than exact numbers; the actual Kc should
+  be tuned to local ETo and soil type.
+
+Note: no numerical Kc values are published in this bulletin because
+research across agro-climatic zones has shown wide variation. Users should
+consult FAO-56 for reference Kc.
+
+— AgriTech Research Cell, Bulletin 14

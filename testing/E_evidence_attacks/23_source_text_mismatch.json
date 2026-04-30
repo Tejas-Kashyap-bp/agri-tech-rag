@@ -1,0 +1,19 @@
+{
+  "crop": "sugarcane",
+  "doc_type": "irrigation_parameters",
+  "notes": "Extraction where extracted values disagree with the source text quoted in <field>_source.",
+  "stages": [
+    {
+      "stage_code": "S2",
+      "stage_name": "Tillering",
+      "kc": 1.25,
+      "kc_source": "Bulletin Appendix A row 2: 'Kc tillering = 0.85'",
+      "mad": 0.5,
+      "mad_source": "Bulletin Appendix A row 2: 'MAD = 0.25'",
+      "root_depth_mm": 600,
+      "root_depth_mm_source": "Bulletin Appendix A: 'rooting depth approximately 600 mm'",
+      "irrigation_notes": "Irrigate every 10 days.",
+      "irrigation_notes_source": "Bulletin Section 3.2: 'Irrigate every 4 days with 25 mm per event.'"
+    }
+  ]
+}

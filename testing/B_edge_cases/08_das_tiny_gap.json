@@ -1,0 +1,40 @@
+{
+  "crop": "maize",
+  "doc_type": "stage_definition",
+  "total_season_days": 110,
+  "stages": [
+    {
+      "stage_code": "S1",
+      "stage_name": "Establishment",
+      "start_das": 0,
+      "end_das": 14,
+      "description": "Germination.",
+      "ndvi_trend": "rising",
+      "ndvi_range": { "min": 0.1, "max": 0.3 },
+      "ndvi_range_source": "Table 1",
+      "key_events": ["emergence"]
+    },
+    {
+      "stage_code": "S2",
+      "stage_name": "Vegetative",
+      "start_das": 16,
+      "end_das": 40,
+      "description": "Leaf growth. Note: 1-day gap (DAS 15 unassigned).",
+      "ndvi_trend": "rising",
+      "ndvi_range": { "min": 0.3, "max": 0.7 },
+      "ndvi_range_source": "Table 1",
+      "key_events": ["V6"]
+    },
+    {
+      "stage_code": "S3",
+      "stage_name": "Flowering",
+      "start_das": 41,
+      "end_das": 65,
+      "description": "Tasseling.",
+      "ndvi_trend": "plateau",
+      "ndvi_range": { "min": 0.7, "max": 0.85 },
+      "ndvi_range_source": "Table 1",
+      "key_events": ["silking"]
+    }
+  ]
+}

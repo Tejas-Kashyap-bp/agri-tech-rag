@@ -1,0 +1,17 @@
+{
+  "crop": "maize",
+  "doc_type": "irrigation_parameters",
+  "stages": [
+    {
+      "stage_code": "S3",
+      "stage_name": "Flowering",
+      "kc": 1.2,
+      "kc_source": "Section 4.1: 'Kc at flowering is approximately ~1.2 under semi-arid conditions'",
+      "mad": 0.3,
+      "mad_source": "Section 4.1: 'MAD around 0.3'",
+      "root_depth_mm": 1000,
+      "root_depth_mm_source": "Section 4.1: 'rooting depth of about 1 m at flowering'",
+      "irrigation_notes": "Critical stage."
+    }
+  ]
+}

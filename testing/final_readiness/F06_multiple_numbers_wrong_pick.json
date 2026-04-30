@@ -1,0 +1,17 @@
+{
+  "crop": "wheat",
+  "doc_type": "irrigation_parameters",
+  "stages": [
+    {
+      "stage_code": "S3",
+      "stage_name": "Booting",
+      "kc": 55,
+      "kc_source": "Table 3 row 3: 'At stage 3 (DAS 55 to 90) the Kc is 1.15 with a range of 0.95 to 1.25'",
+      "mad": 0.3,
+      "mad_source": "Table 3 row 3: 'MAD = 0.3'",
+      "root_depth_mm": 90,
+      "root_depth_mm_source": "Table 3 row 3: 'DAS 55 to 90, rooting depth 900 mm'",
+      "irrigation_notes": "Critical booting phase."
+    }
+  ]
+}

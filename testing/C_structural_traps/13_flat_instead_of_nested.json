@@ -1,0 +1,30 @@
+{
+  "crop": "wheat",
+  "doc_type": "stage_definition",
+  "total_season_days": 140,
+  "stages": [
+    {
+      "stage_code": "S1",
+      "stage_name": "CRI",
+      "start_das": 0,
+      "end_das": 21,
+      "description": "Crown root initiation.",
+      "ndvi_trend": "rising",
+      "ndvi_min": 0.2,
+      "ndvi_max": 0.4,
+      "ndvi_range_source": "Table 3",
+      "key_events": ["CRI"]
+    },
+    {
+      "stage_code": "S2",
+      "stage_name": "Tillering",
+      "start_das": 22,
+      "end_das": 55,
+      "description": "Tillering phase.",
+      "ndvi_trend": "rising",
+      "ndvi_range": "0.4 to 0.7",
+      "ndvi_range_source": "Table 3",
+      "key_events": ["tillering"]
+    }
+  ]
+}

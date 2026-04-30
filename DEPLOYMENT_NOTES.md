@@ -1,0 +1,164 @@
+# DEPLOYMENT NOTES — For Client Handoff
+
+> This document explains what needs to change when moving from development to production,
+> and how to swap out components (vector DB, LLM) without rewriting the codebase.
+
+---
+
+## Current Setup (Development / Phase 1)
+
+| Component | Current Choice | Location |
+|-----------|---------------|----------|
+| Vector Database | ChromaDB (local, file-based) | `app/storage/vector_store.py` |
+| LLM Provider | Groq API | `app/llm/groq_provider.py` |
+| Embedding Model | sentence-transformers (local) | `app/pipeline/embedder.py` |
+| Pending State | In-memory Python dict | `app/storage/pending_store.py` |
+
+---
+
+## How to Swap the Vector Database (ChromaDB → Pinecone or other)
+
+The vector store is behind an abstraction layer. `VectorStore` is an abstract class in `app/storage/vector_store.py`.
+
+**Steps to migrate:**
+1. Create a new class (e.g. `PineconeStore`) that implements `VectorStore`
+2. Implement these three methods: `store()`, `search_by_doc_key()`, `deactivate()`
+3. In `app/config.py`, change the instantiation from `ChromaStore()` to `PineconeStore()`
+4. Nothing else changes
+
+All pipeline code, all API routes, all validation — zero changes required.
+
+**Metadata fields that must be preserved in any new DB:**
+```
+doc_id, doc_key, engine, type, crop, version, is_active, source, priority, description
+```
+
+**Critical retrieval rule:** every query must filter `is_active = true`. Enforce this inside the new store class.
+
+---
+
+## How to Swap the LLM (Groq → OpenAI / Local Ollama / Other)
+
+The LLM is behind an abstraction layer. `LLMProvider` is an abstract class in `app/llm/base.py`.
+
+**Steps to migrate:**
+1. Create a new class (e.g. `OpenAIProvider`) that implements `LLMProvider`
+2. Implement the `complete(prompt, system)` method
+3. In `app/config.py`, change the instantiation from `GroqProvider()` to `OpenAIProvider()`
+4. Nothing else changes
+
+**For local/open-source LLMs (e.g. Ollama):**
+Same pattern. Create `OllamaProvider`, point to local endpoint, done.
+
+---
+
+## Tuning the Evidence Checker
+
+The Evidence Checker (`app/pipeline/evidence_checker.py`) is what enforces
+"no-inference" on LLM extraction. It is regex/string-only — no ML — which
+makes it deterministic and cheap, but means it requires a keyword map to
+disambiguate numbers in co-located tables (e.g. a source quoting
+`"DAS 55 to 90, the Kc is 1.15"` must not accept `55` as a Kc value).
+
+**Two knobs you are likely to adjust:**
+
+1. **`FIELD_KEYWORDS`** — maps a field name to keywords that should appear
+   near the number in the source text. Fields not in this map get a
+   permissive fallback (any numeric match is accepted). Add an entry when
+   you introduce a new numeric field that collides with existing keywords
+   or appears in tabular contexts.
+
+   ```python
+   FIELD_KEYWORDS = {
+       "kc": ["kc"],
+       "mad": ["mad"],
+       "root_depth_mm": ["root", "depth"],
+       "ndvi_range": ["ndvi"],
+   }
+   ```
+
+2. **`_ALL_KEYWORDS`** distractor list — `das`, `day`, `stage` are pre-
+   registered as distractors so numbers closer to them than to the field
+   keyword are rejected. Extend this list if you hit false-positives from
+   other co-located table labels (e.g. `week`, `month`).
+
+The `_PROXIMITY_WINDOW` constant (default 50 characters) is the half-width
+of the keyword search window around each numeric match. Shrinking it
+reduces false positives but may also cause legitimate matches to miss;
+leave it at 50 unless you have data showing otherwise.
+
+Known deferred-to-Phase-2 Evidence Checker limitations (these produce
+false flags today — reviewers confirm manually):
+
+- Unit equivalence (cm ↔ mm, `120 cm` vs `1200 mm`)
+- Percentage ↔ fraction (`40%` vs `0.4`)
+- Range containment in source (`"ranges 0.6 to 0.9"` with value `0.7`)
+- Unicode lookalikes (middle-dot decimals, en-dash ranges)
+- OCR digit substitutions (`0↔O`, `1↔l`)
+
+---
+
+## How to Make Pending States Persistent (Phase 2)
+
+Currently, pending states (WAIT states) live in Python dicts. If the server restarts, they are lost. The 30-minute TTL limits risk, but in production you should persist these.
+
+**Steps to fix:**
+1. Replace `app/storage/pending_store.py` with a SQLite, Redis, or any database-backed implementation
+2. Keep the same interface (same function names, same data shapes)
+3. Nothing else in the codebase changes
+
+---
+
+## Environment Variables Required
+
+Create a `.env` file (never commit this):
+
+```env
+# LLM
+GROQ_API_KEY=your_groq_key_here
+
+# ChromaDB
+CHROMA_PERSIST_DIR=./chroma_db
+
+# App
+PENDING_TTL_MINUTES=30
+AUTO_APPROVE_THRESHOLD=0.9
+```
+
+---
+
+## Dev Tools (NOT for client)
+
+| Tool | Location | Purpose |
+|------|----------|---------|
+| Dev Frontend | `frontend/index.html` | Simple UI to test upload/confirm flows without curl |
+| Swagger UI | `http://localhost:8000/docs` | Interactive API explorer, auto-generated by FastAPI |
+
+Both are gitignored or excluded from the client deliverable. The `frontend/` folder is in `.gitignore`.
+
+The CORS middleware in `main.py` is currently set to `allow_origins=["*"]`. **Tighten this before production.**
+
+---
+
+## Production Checklist
+
+- [ ] Replace in-memory pending store with persistent store (SQLite/Redis)
+- [ ] Move ChromaDB to a managed vector DB (Pinecone, Weaviate, etc.)
+- [ ] Set up proper API authentication (the current API has no auth)
+- [ ] Add rate limiting on upload endpoint
+- [ ] Set up logging to file (currently logs to console only)
+- [ ] Run under a process manager (gunicorn + uvicorn workers)
+- [ ] Set `CHROMA_PERSIST_DIR` to a volume-mounted path in production
+
+---
+
+## Collection Naming Convention
+
+ChromaDB collections follow this pattern:
+
+```
+{crop_name}_collection   →  maize_collection, apple_collection, etc.
+common_collection        →  documents shared across all crops
+```
+
+When migrating to Pinecone (or similar), use namespaces or index names following the same pattern. Alternatively, use a single index/collection with metadata filtering on `crop`.

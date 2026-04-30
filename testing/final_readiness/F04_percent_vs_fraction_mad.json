@@ -1,0 +1,17 @@
+{
+  "crop": "maize",
+  "doc_type": "irrigation_parameters",
+  "stages": [
+    {
+      "stage_code": "S2",
+      "stage_name": "Vegetative",
+      "kc": 0.8,
+      "kc_source": "Bulletin row 2: 'Kc = 0.8'",
+      "mad": 0.4,
+      "mad_source": "Bulletin row 2: 'MAD = 40%'",
+      "root_depth_mm": 600,
+      "root_depth_mm_source": "Bulletin row 2: 'roots to 600 mm'",
+      "irrigation_notes": "Standard schedule."
+    }
+  ]
+}

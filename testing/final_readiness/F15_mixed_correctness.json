@@ -1,0 +1,50 @@
+{
+  "crop": "maize",
+  "doc_type": "irrigation_parameters",
+  "stages": [
+    {
+      "stage_code": "S1",
+      "stage_name": "Establishment",
+      "kc": 0.4,
+      "kc_source": "Table 1 row 1: 'Kc establishment = 0.4'",
+      "mad": 0.5,
+      "mad_source": "Table 1 row 1: 'MAD = 0.5'",
+      "root_depth_mm": 300,
+      "root_depth_mm_source": "Table 1 row 1: 'root depth 300 mm'",
+      "irrigation_notes": "Light frequent irrigations."
+    },
+    {
+      "stage_code": "S2",
+      "stage_name": "Vegetative",
+      "kc": 0.85,
+      "kc_source": "Table 1 row 2: 'Kc vegetative approximately 0.8'",
+      "mad": 0.4,
+      "mad_source": "Table 1 row 2: 'MAD = 0.4'",
+      "root_depth_mm": 600,
+      "root_depth_mm_source": "Table 1 row 2: 'root depth 600 mm'",
+      "irrigation_notes": "Standard schedule."
+    },
+    {
+      "stage_code": "S3",
+      "stage_name": "Flowering",
+      "kc": 1.2,
+      "kc_source": null,
+      "mad": 0.3,
+      "mad_source": "Table 1 row 3: 'MAD = 0.3'",
+      "root_depth_mm": 1000,
+      "root_depth_mm_source": "Table 1 row 3: 'root depth 1000 mm'",
+      "irrigation_notes": "Critical."
+    },
+    {
+      "stage_code": "S4",
+      "stage_name": "Grain Filling",
+      "kc": 1.0,
+      "kc_source": "Table 1 row 4: 'Kc grain filling = 1.0'",
+      "mad": 0.4,
+      "mad_source": "Table 1 row 4: 'MAD = 0.4'",
+      "root_depth_mm": 1200,
+      "root_depth_mm_source": "Table 1 row 4: 'root depth 1200 mm'",
+      "irrigation_notes": "Steady moisture."
+    }
+  ]
+}

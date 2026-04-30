@@ -1,0 +1,28 @@
+{
+  "doc_type": "irrigation_parameters",
+  "notes": "Generic cereal irrigation guidance. Crop not specified.",
+  "stages": [
+    {
+      "stage_code": "S1",
+      "stage_name": "Establishment",
+      "kc": 0.4,
+      "kc_source": "Generic Table A",
+      "mad": 0.5,
+      "mad_source": "Generic Table A",
+      "root_depth_mm": 300,
+      "root_depth_mm_source": "Generic Table A",
+      "irrigation_notes": "Light frequent irrigations."
+    },
+    {
+      "stage_code": "S2",
+      "stage_name": "Peak demand",
+      "kc": 1.15,
+      "kc_source": "Generic Table A",
+      "mad": 0.3,
+      "mad_source": "Generic Table A",
+      "root_depth_mm": 900,
+      "root_depth_mm_source": "Generic Table A",
+      "irrigation_notes": "Maintain soil at field capacity."
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "crop": "wheat",
+  "doc_type": "stage_definition",
+  "total_season_days": 140,
+  "stages": [
+    {
+      "stage_code": "S1",
+      "stage_name": "Pre-emergence",
+      "start_das": 0,
+      "end_das": 7,
+      "description": "Bare soil, germinating seed.",
+      "ndvi_trend": "flat",
+      "ndvi_range": { "min": -1.0, "max": -1.0 },
+      "ndvi_range_source": "Table 2: 'bare soil NDVI near -1'",
+      "key_events": ["sowing"]
+    },
+    {
+      "stage_code": "S2",
+      "stage_name": "Peak canopy",
+      "start_das": 8,
+      "end_das": 90,
+      "description": "Full canopy closure.",
+      "ndvi_trend": "plateau",
+      "ndvi_range": { "min": 1.0, "max": 1.0 },
+      "ndvi_range_source": "Table 2: 'peak canopy saturates at NDVI = 1.0'",
+      "key_events": ["anthesis"]
+    },
+    {
+      "stage_code": "S3",
+      "stage_name": "Senescence",
+      "start_das": 91,
+      "end_das": 140,
+      "description": "Leaf senescence.",
+      "ndvi_trend": "declining",
+      "ndvi_range": { "min": 0.0, "max": 0.5 },
+      "ndvi_range_source": "Table 2",
+      "key_events": ["maturity"]
+    }
+  ]
+}
