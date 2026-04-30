@@ -62,6 +62,14 @@ class Settings(BaseSettings):
     # Embeddings
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
 
+    # Retrieval — MMR (Maximal Marginal Relevance) re-ranking.
+    # Off by default; flip to A/B test diversity-aware retrieval.
+    # MMR_LAMBDA in [0,1]: 1.0 = pure relevance (== single-query), 0.0 = pure diversity.
+    # MMR_FETCH_K: how many candidates to pull from Chroma before MMR re-ranks down to k.
+    MMR_ENABLED: bool = False
+    MMR_LAMBDA: float = 0.5
+    MMR_FETCH_K: int = 10
+
     # Cross-repo reuse: where to find the agri-integrated checkout.
     # Defaults to a sibling directory next to agri-rag.
     AGRI_INTEGRATED_PATH: str = str(_INTEGRATED_PATH)
