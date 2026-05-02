@@ -1,0 +1,29 @@
+disease_name,stage_code,stage_name,calendar_window,temp_c_min,temp_c_max,humidity_pct_min,humidity_pct_max,conducive_duration_hrs_min,conducive_duration_hrs_max,base_risk_pct
+Apple Scab,S1,Vegetative,March-10 April,10,20,85,100,9,12,60
+Apple Scab,S2,Flowering,11 April- 10 May,12,24,85,100,9,16,80
+Apple Scab,S3,Fruiting Stage,11 May- 15 Aug,15,25,80,100,6,12,70
+Apple Scab,S4,Harvesting Stage,16 Aug-Nov,10,22,80,100,8,12,40
+Alternaria Leaf Blotch,S1,Vegetative,March-10 April,15,22,75,95,8,10,35
+Alternaria Leaf Blotch,S2,Flowering,11 April- 10 May,18,25,80,95,8,12,45
+Alternaria Leaf Blotch,S3,Fruiting Stage,11 May- 15 Aug,20,30,80,100,10,16,75
+Alternaria Leaf Blotch,S4,Harvesting Stage,16 Aug-Nov,18,28,75,95,8,12,50
+Marssonina Leaf Blotch / Premature Leaf Fall,S1,Vegetative,March-10 April,12,20,75,90,8,10,30
+Marssonina Leaf Blotch / Premature Leaf Fall,S2,Flowering,11 April- 10 May,15,22,80,95,8,12,40
+Marssonina Leaf Blotch / Premature Leaf Fall,S3,Fruiting Stage,11 May- 15 Aug,18,28,85,100,10,16,80
+Marssonina Leaf Blotch / Premature Leaf Fall,S4,Harvesting Stage,16 Aug-Nov,15,25,85,100,10,14,70
+Powdery Mildew,S1,Vegetative,March-10 April,10,22,60,90,6,8,60
+Powdery Mildew,S2,Flowering,11 April- 10 May,12,25,60,90,6,10,75
+Powdery Mildew,S3,Fruiting Stage,11 May- 15 Aug,15,18,55,85,6,8,65
+Powdery Mildew,S4,Harvesting Stage,16 Aug-Nov,10,22,60,85,6,8,35
+Collar Rot / Crown Rot,S1,Vegetative,March-10 April,10,20,80,100,24,48,40
+Collar Rot / Crown Rot,S2,Flowering,11 April- 10 May,12,22,80,100,24,48,45
+Collar Rot / Crown Rot,S3,Fruiting Stage,11 May- 15 Aug,15,28,85,100,24,72,75
+Collar Rot / Crown Rot,S4,Harvesting Stage,16 Aug-Nov,10,24,80,100,24,48,60
+Root Rot,S1,Vegetative,March-10 April,10,20,80,100,24,48,40
+Root Rot,S2,Flowering,11 April- 10 May,12,24,80,100,24,48,45
+Root Rot,S3,Fruiting Stage,11 May- 15 Aug,15,28,85,100,48,72,75
+Root Rot,S4,Harvesting Stage,16 Aug-Nov,10,24,80,100,24,72,60
+Sooty Blotch and Flyspeck,S1,Vegetative,March-10 April,10,20,75,90,8,12,25
+Sooty Blotch and Flyspeck,S2,Flowering,11 April- 10 May,12,24,80,95,10,12,35
+Sooty Blotch and Flyspeck,S3,Fruiting Stage,11 May- 15 Aug,18,28,85,100,12,24,75
+Sooty Blotch and Flyspeck,S4,Harvesting Stage,16 Aug-Nov,15,25,85,100,12,24,80

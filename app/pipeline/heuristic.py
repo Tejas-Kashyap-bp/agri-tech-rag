@@ -72,13 +72,18 @@ def prefilter(text: str) -> list[str]:
 # Shared / supporting types map to None — they don't count toward ambiguity.
 _DOC_TYPE_TO_ENGINE: dict[str, str | None] = {
     "stage_definition":      "e1_stage",
-    "irrigation_parameters": "e2_irrigation",
-    "crop_parameters":       "e2_irrigation",
+    # irrigation_parameters / crop_parameters: e2 removed for apple. Mapped to
+    # None so a stray legacy doc still ingests cleanly without forcing engine
+    # ambiguity in the heuristic check.
+    "irrigation_parameters": None,
+    "crop_parameters":       None,
     "fertigation_schedule":  "e3_nutrition",
-    "ipm_schedule":               "e4_crop_health",
-    "pest_disease_condition_rule":"e4_crop_health",
+    "ipm_schedule":               "e4_pest_disease_risk",
+    "pest_disease_condition_rule":"e4_pest_disease_risk",
     "yield_parameters":      "e5_yield",
-    "market_data":           "e6_financial",
+    # market_data: e6 removed for apple — leave None so a stray legacy doc
+    # still ingests without forcing engine ambiguity.
+    "market_data":           None,
     # supporting types — don't force ambiguity
     "condition_rule":        None,
     "treatment_mapping":     None,

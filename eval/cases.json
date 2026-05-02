@@ -8,21 +8,15 @@
       "expected_doc_keys": ["maize_stage_definition"]
     },
     {
-      "id": "maize_irrigation",
-      "crop": "maize",
-      "engine": "e2_irrigation",
-      "expected_doc_keys": ["maize_irrigation_parameters"]
-    },
-    {
       "id": "maize_nutrition",
       "crop": "maize",
       "engine": "e3_nutrition",
       "expected_doc_keys": ["maize_fertigation_schedule"]
     },
     {
-      "id": "maize_crop_health",
+      "id": "maize_pest_disease_risk",
       "crop": "maize",
-      "engine": "e4_crop_health",
+      "engine": "e4_pest_disease_risk",
       "expected_doc_keys": ["maize_ipm_schedule"]
     },
     {

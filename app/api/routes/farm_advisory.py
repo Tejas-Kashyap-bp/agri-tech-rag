@@ -37,6 +37,17 @@ from app.data_fetchers import get_farm_profile, get_soil_data, get_weather_featu
 router = APIRouter()
 
 
+# Demo-mode tree_count map. Replace with a real `farms.tree_count` column
+# when the migration runs. Default density assumes traditional spacing
+# (~109 trees/acre); high-density orchards run 400–1000 trees/acre.
+_DEMO_TREE_COUNTS: dict[str, int] = {
+    "APPLE_DEMO_001": 109,
+    "APPLE_DEMO_002": 109,
+    "APPLE_DEMO_003": 109,
+}
+_DEFAULT_TREES_PER_ACRE = 109
+
+
 class SatellitePoint(BaseModel):
     date: str
     value: float
@@ -55,7 +66,11 @@ class FarmAdvisoryRequest(BaseModel):
     satellite_data: Optional[SatelliteData] = None
     iot_soil_moisture_mm: Optional[float] = None
     pre_fetched_soil: Optional[dict[str, Any]] = None  # bypasses SoilGrids fetch
-    k: int = Field(default=1, ge=1, le=10)
+    # Default raised 1 → 3 so when E4 carries multiple doc_types
+    # (pest_disease_condition_rule + ipm_schedule when 4.2 lands), retrieval
+    # pulls all of them in one call. k is an UPPER bound — single-doc engines
+    # (E1/E3/E5/E6) just return the one doc they have.
+    k: int = Field(default=3, ge=1, le=10)
 
 
 def _today_utc() -> str:
@@ -96,53 +111,25 @@ async def farm_advisory(req: FarmAdvisoryRequest):
     lon = farm.get("longitude")
     language = req.language or farm.get("language") or "English"
 
-    # ── 2) Parallel fetch: weather + soil ──────────────────────────────────
+    # ── 2) Fetch weather (soil disabled for demo) ──────────────────────────
+    # SoilGrids fetch was the dominant tail-latency in /farm-advisory
+    # (10-60s on the free tier). Disabled for the demo so the request
+    # finishes quickly. To re-enable, restore the asyncio.gather block
+    # below and the SoilGrids guard. Callers can still pass
+    # `pre_fetched_soil` in the request body to inject soil manually.
     fetch_errors: dict[str, str] = {}
-
-    state = farm.get("state")
-    if not state:
-        raise HTTPException(
-            status_code=422,
-            detail=(
-                f"Farm '{req.farm_id}' has no `state` on record — required "
-                "for soil lookup. Update the farm record before calling."
-            ),
-        )
 
     def _fetch_weather():
         if lat is None or lon is None:
             raise RuntimeError("Farm has no latitude/longitude — cannot fetch weather")
         return get_weather_features(lat, lon)
 
-    def _fetch_soil():
-        if req.pre_fetched_soil is not None:
-            return req.pre_fetched_soil
-        return get_soil_data(
-            report_path=None,
-            lat=lat,
-            lon=lon,
-            state=state,
-            district=farm.get("district"),
-            soil_type=farm.get("soil_type") or "Loam",
-            crop=crop,
-            priority_order=None,
-        ).to_dict()
-
     weather: Optional[dict] = None
-    soil: Optional[dict] = None
-    weather_result, soil_result = await asyncio.gather(
-        asyncio.to_thread(_fetch_weather),
-        asyncio.to_thread(_fetch_soil),
-        return_exceptions=True,
-    )
-    if isinstance(weather_result, Exception):
-        fetch_errors["weather_fetch"] = f"{type(weather_result).__name__}: {weather_result}"
-    else:
-        weather = weather_result
-    if isinstance(soil_result, Exception):
-        fetch_errors["soil_fetch"] = f"{type(soil_result).__name__}: {soil_result}"
-    else:
-        soil = soil_result
+    soil: Optional[dict] = req.pre_fetched_soil  # honour explicit override only
+    try:
+        weather = await asyncio.to_thread(_fetch_weather)
+    except Exception as exc:
+        fetch_errors["weather_fetch"] = f"{type(exc).__name__}: {exc}"
 
     # ── 3) Build AdvisoryContext ───────────────────────────────────────────
     satellite_payload: Optional[dict] = None
@@ -174,6 +161,36 @@ async def farm_advisory(req: FarmAdvisoryRequest):
         "past_repayment_behavior": farm.get("past_repayment_behavior"),
         "expected_harvest_date": farm.get("expected_harvest_date"),
         "iot_soil_moisture_mm": req.iot_soil_moisture_mm,
+        # tree_count is required by E4.2 (IPM cure schedule) to scale per-tree
+        # and per-spray-volume doses to the actual orchard size. The Supabase
+        # `farms` table does not yet have a `tree_count` column, so we read it
+        # from a per-farm demo map here with a sensible default. To migrate to
+        # the column, run `ALTER TABLE farms ADD COLUMN tree_count INT;` then
+        # replace this lookup with `farm.get("tree_count")`.
+        "tree_count": _DEMO_TREE_COUNTS.get(
+            farm.get("farm_id"),
+            _DEFAULT_TREES_PER_ACRE * (farm.get("farm_area_acres") or 1),
+        ),
+        # E5 yield-calculation inputs. Read from the farms record if present;
+        # otherwise apple-orchard defaults so the engine produces a base yield
+        # number for the UI even on farms missing these columns.
+        "radius_of_tree": farm.get("radius_of_tree") or 0.10,
+        "crop_density": farm.get("crop_density") or 2000,
+        "average_fruit_weight_g": farm.get("average_fruit_weight_g") or 150,
+        # Orchard altitude in feet — OPTIONAL. If the farms record carries an
+        # explicit altitude column we pass it through; otherwise we leave it
+        # absent and let E1 (stage) infer altitude from the district/state in
+        # `location`. The LLM has reliable priors for the apple-growing belts
+        # of HP / J&K / Uttarakhand, so a free-text place name is enough.
+        "altitude_ft": (
+            farm.get("altitude_ft")
+            or farm.get("elevation_ft")
+            or (
+                round(float(farm["elevation_m"]) * 3.28084)
+                if farm.get("elevation_m") is not None
+                else None
+            )
+        ),
     }
 
     try:

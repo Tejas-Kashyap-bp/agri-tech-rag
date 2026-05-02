@@ -1,0 +1,130 @@
+{
+  "crop": "apple",
+  "doc_type": "fertigation_schedule",
+  "dose_unit_basis": "per_tree",
+  "calendar_basis": "absolute_dates",
+  "year_extrapolation_rule": "for tree_age_years >= 5, use year_4 schedule",
+  "december_application_window": {
+    "nominal_date_mm_dd": "12-15",
+    "tolerance_days": 7,
+    "note": "Client specified 'mid-December' for the annual December application. Window: Dec 8 to Dec 22. Applies to the year-1 basal_dose AND to every year-2+ INM event whose date_mm_dd is 12-15."
+  },
+  "soil_correction": null,
+  "soil_correction_status": "pending_client_input",
+  "weather_guardrails": null,
+  "weather_guardrails_status": "pending_design",
+  "notes": [
+    "Dose unit basis is per tree across all years and all applications.",
+    "Only Year 1 has a basal_dose. Year 2 onward have NO basal_dose — every application (including the mid-December one) is an INM event. Client-confirmed terminology.",
+    "Year 1: basal_dose only, applied mid-December. No in-season INM events in Year 1 or Year 2.",
+    "Year 2: INM events only. The mid-December application (date_mm_dd 12-15) is the sole event of the year — same materials as the year-1 basal but classified as INM.",
+    "Year 3 and Year 4: INM events only — one mid-December application (12-15) plus the in-season schedule (Jun-Oct).",
+    "April and May (flowering) carry no fertigation by design.",
+    "Year 5 is not separately tabulated; engine should return year-4 schedule for any tree_age_years >= 5.",
+    "Soil-test correction table will be supplied later by client; raw sheet values are used until then."
+  ],
+  "years": [
+    {
+      "tree_age_years": 1,
+      "basal_dose": [
+        {"material": "FYM",                 "dose_min": 15,  "dose_max": 20,  "dose_unit": "kg"},
+        {"material": "Neem Cake",           "dose": 500,                       "dose_unit": "g"},
+        {"material": "SSP",                 "dose": 100,                       "dose_unit": "g"},
+        {"material": "MOP",                 "dose": 100,                       "dose_unit": "g"},
+        {"material": "Azotobacter",         "dose": 20,                        "dose_unit": "g"},
+        {"material": "PSB",                 "dose": 20,                        "dose_unit": "g"},
+        {"material": "KSB",                 "dose": 20,                        "dose_unit": "g"},
+        {"material": "Mycorrhiza",          "dose": 10,                        "dose_unit": "g"},
+        {"material": "Micronutrient mix",   "dose": 40,                        "dose_unit": "g"},
+        {"material": "Humic acid",          "dose": 25,                        "dose_unit": "g"},
+        {"material": "Zinc Sulphate",       "dose": 15,                        "dose_unit": "g"},
+        {"material": "Magnesium Sulphate",  "dose": 20,                        "dose_unit": "g"},
+        {"material": "Bentonite Sulphur",   "dose": 25,                        "dose_unit": "g"}
+      ],
+      "basal_dose_date_mm_dd": "12-15",
+      "inm_events": []
+    },
+    {
+      "tree_age_years": 2,
+      "inm_events": [
+        {"date_mm_dd": "12-15", "material": "FYM",                 "dose_min": 20, "dose_max": 25, "dose_unit": "kg"},
+        {"date_mm_dd": "12-15", "material": "Neem Cake",           "dose": 1,                       "dose_unit": "kg"},
+        {"date_mm_dd": "12-15", "material": "SSP",                 "dose": 200,                     "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "MOP",                 "dose": 200,                     "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Azotobacter",         "dose": 25,                      "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "PSB",                 "dose": 25,                      "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "KSB",                 "dose": 25,                      "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Mycorrhiza",          "dose": 20,                      "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Micronutrient mix",   "dose": 80,                      "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Humic acid",          "dose": 50,                      "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Zinc Sulphate",       "dose": 25,                      "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Magnesium Sulphate",  "dose": 30,                      "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Bentonite Sulphur",   "dose": 25,                      "dose_unit": "g"}
+      ]
+    },
+    {
+      "tree_age_years": 3,
+      "inm_events": [
+        {"date_mm_dd": "12-15", "material": "FYM",                 "dose_min": 25, "dose_max": 30, "dose_unit": "kg"},
+        {"date_mm_dd": "12-15", "material": "Neem Cake",           "dose": 1,                       "dose_unit": "kg"},
+        {"date_mm_dd": "12-15", "material": "SSP",                 "dose": 300,                     "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "MOP",                 "dose": 300,                     "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Azotobacter",         "dose": 30,                      "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "PSB",                 "dose": 30,                      "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "KSB",                 "dose": 30,                      "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Mycorrhiza",          "dose": 30,                      "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Micronutrient mix",   "dose": 120,                     "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Humic acid",          "dose": 100,                     "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Zinc Sulphate",       "dose": 35,                      "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Magnesium Sulphate",  "dose": 40,                      "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Bentonite Sulphur",   "dose": 40,                      "dose_unit": "g"},
+        {"date_mm_dd": "06-15", "material": "19:19:19",            "dose": 4,                       "dose_unit": "kg"},
+        {"date_mm_dd": "06-25", "material": "12:61:00",            "dose": 4,                       "dose_unit": "kg"},
+        {"date_mm_dd": "07-10", "material": "Calcium nitrate",     "dose": 4,                       "dose_unit": "kg"},
+        {"date_mm_dd": "07-10", "material": "Boron",               "dose": 400,                     "dose_unit": "g"},
+        {"date_mm_dd": "07-20", "material": "Zinc Sulphate",       "dose": 500,                     "dose_unit": "g"},
+        {"date_mm_dd": "07-30", "material": "Micronutrient mix",   "dose": 2,                       "dose_unit": "kg"},
+        {"date_mm_dd": "08-10", "material": "13:00:45",            "dose": 5,                       "dose_unit": "kg"},
+        {"date_mm_dd": "08-30", "material": "00:00:50",            "dose": 5,                       "dose_unit": "kg"},
+        {"date_mm_dd": "09-15", "material": "12:61:00",            "dose": 5,                       "dose_unit": "kg"},
+        {"date_mm_dd": "09-30", "material": "13:00:45",            "dose": 5,                       "dose_unit": "kg"},
+        {"date_mm_dd": "10-10", "material": "19:19:19",            "dose": 5,                       "dose_unit": "kg"}
+      ]
+    },
+    {
+      "tree_age_years": 4,
+      "inm_events": [
+        {"date_mm_dd": "12-15", "material": "FYM",                 "dose_min": 25, "dose_max": 30, "dose_unit": "kg"},
+        {"date_mm_dd": "12-15", "material": "Neem Cake",           "dose": 1.5,                     "dose_unit": "kg"},
+        {"date_mm_dd": "12-15", "material": "SSP",                 "dose": 400,                     "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "MOP",                 "dose": 400,                     "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Azotobacter",         "dose": 40,                      "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "PSB",                 "dose": 40,                      "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "KSB",                 "dose": 40,                      "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Mycorrhiza",          "dose": 40,                      "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Micronutrient mix",   "dose": 150,                     "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Humic acid",          "dose": 100,                     "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Zinc Sulphate",       "dose": 50,                      "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Magnesium Sulphate",  "dose": 50,                      "dose_unit": "g"},
+        {"date_mm_dd": "12-15", "material": "Bentonite Sulphur",   "dose": 40,                      "dose_unit": "g"},
+        {"date_mm_dd": "06-15", "material": "19:19:19",            "dose": 5,                       "dose_unit": "kg"},
+        {"date_mm_dd": "06-25", "material": "12:61:00",            "dose": 5,                       "dose_unit": "kg"},
+        {"date_mm_dd": "07-10", "material": "Calcium nitrate",     "dose": 5,                       "dose_unit": "kg"},
+        {"date_mm_dd": "07-10", "material": "Boron",               "dose": 500,                     "dose_unit": "g"},
+        {"date_mm_dd": "07-20", "material": "Zinc Sulphate",       "dose": 600,                     "dose_unit": "g"},
+        {"date_mm_dd": "07-30", "material": "Micronutrient mix",   "dose": 3,                       "dose_unit": "kg"},
+        {"date_mm_dd": "08-10", "material": "13:00:45",            "dose": 6,                       "dose_unit": "kg"},
+        {"date_mm_dd": "08-30", "material": "00:00:50",            "dose": 6,                       "dose_unit": "kg"},
+        {"date_mm_dd": "09-15", "material": "12:61:00",            "dose": 6,                       "dose_unit": "kg"},
+        {"date_mm_dd": "09-30", "material": "13:00:45",            "dose": 6,                       "dose_unit": "kg"},
+        {"date_mm_dd": "10-10", "material": "19:19:19",            "dose": 6,                       "dose_unit": "kg"}
+      ]
+    },
+    {
+      "tree_age_years": 5,
+      "alias_of_year": 4,
+      "inm_events": [],
+      "note": "For tree_age_years >= 5, apply the year_4 schedule. This entry is a pointer; consumers should resolve it to year_4."
+    }
+  ]
+}

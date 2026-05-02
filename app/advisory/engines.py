@@ -17,10 +17,9 @@ WHY a flat list of specs (instead of subclassed engine objects):
   (Phase 2), that engine can graduate to its own module — but Phase 1 doesn't
   need it.
 
-E6 (financial) is included in the default flow at the client's request: every
-advisory call should produce a financial risk read alongside the agronomic
-engines. E6 depends on E5's yield outlook (revenue projection needs an
-expected yield), so it runs LAST in the orchestrator's execution tiers.
+E6 (financial) was removed from the apple build — the UI does not surface a
+financial card and removing the engine cuts one full LLM round-trip from the
+critical path. Do not reuse the e6 id for a different engine.
 """
 
 from dataclasses import dataclass
@@ -36,6 +35,12 @@ class EngineSpec:
     # response so an audit can tie a stored advisory back to the exact
     # prompt that produced it. Format: "<engine_short>.v<n>".
     prompt_version: str = "v1"
+    # Which engine bucket to read from at retrieval time. Defaults to
+    # engine_id (1-to-1 mapping). Override when two engines should share the
+    # same ingested doc pool — e.g. E4.1 (risk) and E4.2 (cure) both read
+    # from the e4_pest_disease_risk bucket so one ingestion of the
+    # ipm_schedule + pest_disease_condition_rule docs serves both.
+    retrieve_engine_id: str = ""
 
 
 ENGINES: list[EngineSpec] = [
@@ -43,44 +48,117 @@ ENGINES: list[EngineSpec] = [
         engine_id="e1_stage",
         output_key="stage",
         focus=(
-            "Determine the current crop growth stage. Use the days_after_sowing "
-            "value from the context together with the stage definition document. "
-            "If satellite NDVI data is available, mention whether it is consistent "
-            "with the calendar-based stage."
+            "Determine the current crop growth stage from the stage definition "
+            "document, then ADJUST that stage for the orchard's altitude. "
+            "Apple is grown across a wide altitude band in the Himalayan belt "
+            "and phenology shifts LATER as altitude rises — roughly 10–15 days "
+            "of delay for every additional 1,000 ft of elevation. For example, "
+            "at ~5,000 ft full bloom may fall around mid-May; at ~6,000 ft the "
+            "same Flowering stage typically lands around end-May; at ~7,000 ft "
+            "it shifts to mid-June. Decide the altitude to use as follows: "
+            "if extra.altitude_ft is present, use that value verbatim; "
+            "otherwise INFER a typical altitude from the orchard's location "
+            "(extra.location.district / state / country) using your knowledge "
+            "of the apple-growing belts of Himachal Pradesh, Jammu & Kashmir, "
+            "Uttarakhand, etc. — for example Shimla / Kullu / Mandi / Kinnaur "
+            "valley-floor orchards sit around 4,500–6,500 ft, while upper "
+            "Kinnaur, Lahaul, and high-belt Kashmir orchards run 7,000–9,000 ft. "
+            "State the altitude you used and whether it was provided or "
+            "inferred from the place name. Then take the document's calendar "
+            "windows as the lower-altitude (~5,000 ft) baseline and shift the "
+            "calendar→stage mapping accordingly. If two stages straddle the "
+            "adjusted date, pick the one the orchard has clearly entered. "
+            "Frame the summary around the CALENDAR DATE, not the moment the "
+            "farmer is reading it. Advisories may be consumed a day or two "
+            "after generation, so DO NOT say 'today' / 'right now'. Phrase it "
+            "as the stage the orchard is in around current_date — for example: "
+            "'For an orchard in Shimla district (around 6,500 ft, inferred "
+            "from the location), the apple crop is currently in the Flowering "
+            "stage (S2) around early May — about a couple of weeks later than "
+            "lower-altitude orchards would be at the same calendar date.' "
+            "Always state the altitude used (and whether it was provided or "
+            "inferred) and call out that the stage is shifted because of "
+            "altitude. Write in simple, plain language a "
+            "farmer can read aloud. Do NOT mention NDVI, NDRE, EVI, or any "
+            "satellite index in the farmer-facing summary, even if such data "
+            "is in the context."
         ),
+        prompt_version="v2",
     ),
-    EngineSpec(
-        engine_id="e2_irrigation",
-        output_key="irrigation",
-        focus=(
-            "Decide whether the farm needs irrigation right now, and if so, give "
-            "a qualitative recommendation (e.g. 'irrigate today', 'skip — rain "
-            "expected'). Use stage-specific Kc / MAD / root-depth values from the "
-            "irrigation parameters document. Mention any risk flags (water stress, "
-            "heat stress, waterlogging, dry spell) suggested by weather and soil."
-        ),
-    ),
+    # NOTE: e2_irrigation removed for apple — perennial tree crops do not run
+    # the daily-irrigation advisory in this system. Engine slot intentionally
+    # left empty; do not reuse the e2 id for a different engine.
     EngineSpec(
         engine_id="e3_nutrition",
         output_key="fertilizer",
         focus=(
-            "Recommend a fertilizer / nutrient action for today. If the context "
-            "indicates a pre-sowing situation, give a basal-dose recommendation. "
-            "Otherwise, look up the closest scheduled day in the fertigation "
-            "schedule and recommend that step, adjusted qualitatively for soil "
-            "(SOC, pH) and NDVI stress when those signals are present."
+            "Recommend a fertilizer / nutrient action for the orchard around "
+            "current_date. If the context indicates a pre-sowing situation, "
+            "give a basal-dose recommendation. Otherwise look up the closest "
+            "scheduled day in the fertigation schedule and recommend that "
+            "step, adjusted qualitatively for soil (SOC, pH) and recent "
+            "field-condition signals when those are present. "
+            "Write in simple, plain language for a farmer. Avoid 'today' / "
+            "'right now' wording — say 'around this time' or 'in the coming "
+            "days' since the advisory may be read a day or two later. Do NOT "
+            "mention NDVI, NDRE, EVI, or any satellite index in the "
+            "farmer-facing summary."
         ),
     ),
     EngineSpec(
-        engine_id="e4_crop_health",
-        output_key="crop_protection",
+        engine_id="e4_pest_disease_risk",
+        output_key="pest_disease_risk",
         focus=(
-            "Generate a crop protection advisory. If the context contains a "
-            "`detection` field, treat this as REACTIVE mode and recommend a "
-            "treatment for the named pest/disease using the treatment mapping. "
-            "Otherwise, treat this as PREVENTIVE mode: pull from the IPM "
-            "schedule for the current DAS window and from any condition rules "
-            "that match the weather. Always honor spray guardrails (rain, wind)."
+            "Real-time pest & disease risk prediction driven by weather. For the "
+            "current crop stage, evaluate every rule in the pest_disease_condition_rule "
+            "document (covering both pests and diseases) against the live weather "
+            "snapshot — temperature band, humidity band, and conducive-condition "
+            "duration (leaf wetness / sustained warm-humid window). Report the "
+            "triggered organisms with their base_risk_pct, the near-miss organisms "
+            "(any one band only marginally outside), and a short qualitative summary "
+            "of which agronomic factor (temperature, humidity, duration) is driving "
+            "the risk today. Do NOT recommend specific pesticide/fungicide products — "
+            "spray-plan / cure recommendations are out of scope for this engine and "
+            "are owned by the upcoming IPM-aligned cure-schedule engine."
+        ),
+    ),
+    EngineSpec(
+        engine_id="e4_2_pest_disease_cure",
+        output_key="pest_disease_cure",
+        retrieve_engine_id="e4_pest_disease_risk",
+        focus=(
+            "IPM-aligned cure & spray plan for today, scaled to THIS farm. Inputs "
+            "you must use: extra.tree_count, extra.farm_area_acres, current_date, "
+            "and (when present) the upstream pest_disease_risk output's list of "
+            "triggered_organisms. From the retrieved ipm_schedule document:\n"
+            "  1. Pick the stage block whose [month_start_mm_dd, month_end_mm_dd] "
+            "     window contains current_date (mm-dd compare). If today falls "
+            "     between two windows, use the one starting earliest.\n"
+            "  2. If pest_disease_risk has triggered_organisms, prioritise the "
+            "     entries in that block whose `targets` list intersects the "
+            "     triggered organism names. Otherwise list the full preventive "
+            "     block for that stage.\n"
+            "  3. Compute total_spray_volume_l = tree_count * "
+            "     scaling_basis.default_spray_volume_per_tree_l.\n"
+            "  4. For EACH organic and chemical line, compute the farmer-specific "
+            "     quantity using the rule:\n"
+            "       basis='spray_solution' → qty = concentration * "
+            "       (total_spray_volume_l / rate_basis_volume_l). Sum together "
+            "       water volume = total_spray_volume_l litres.\n"
+            "       basis='per_acre'       → qty = concentration * farm_area_acres.\n"
+            "       basis='per_tree'       → qty = concentration * tree_count.\n"
+            "       basis='guidance_only' or 'as_needed' → emit the action text "
+            "       verbatim, no quantity.\n"
+            "     If concentration_min and concentration_max are present, compute "
+            "     the qty range using both. Always show units.\n"
+            "  5. Return TWO recommendation lists: organic_recommendations[] and "
+            "     chemical_recommendations[]. Each item must include: material (or "
+            "     action), computed_qty (as a string with units, or null for "
+            "     guidance lines), per_100l_or_per_acre_basis (the original CSV "
+            "     line, for traceability), and targets (if present).\n"
+            "  6. The summary must lead with the calendar stage and tree count "
+            "     (e.g., 'For your 200-tree orchard in the Petal Fall stage, "
+            "     mix 5 kg Mancozeb in 2,000 L water…')."
         ),
     ),
     EngineSpec(
@@ -91,20 +169,6 @@ ENGINES: list[EngineSpec] = [
             "yield_parameters document for the crop-specific harvest index and "
             "biomass assumptions. If satellite indices and weather forecasts are "
             "present, comment on expected harvest window and any risk to yield."
-        ),
-    ),
-    EngineSpec(
-        engine_id="e6_financial",
-        output_key="financial",
-        focus=(
-            "Produce a financial risk advisory for this farm. Combine the yield "
-            "outlook from the upstream E5 engine with the farm's loan / market "
-            "context (outstanding loan, market price, repayment history) and the "
-            "financial_policy document from the common knowledge base. Report: "
-            "projected harvest value, loan coverage ratio (projected value vs "
-            "outstanding loan), a qualitative risk category (low / moderate / "
-            "high), and the main drivers of that risk. If yield or loan inputs "
-            "are missing, say so explicitly rather than inventing numbers."
         ),
     ),
 ]

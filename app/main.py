@@ -29,7 +29,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api.routes import advisory, browse, confirm, coverage, farm_advisory, upload
+from app.api.routes import advisory, browse, confirm, coverage, farm_advisory, ui_advisory, upload
 
 # Surface advisory.* loggers at INFO so request_id + per-engine timing show up
 # in stdout. uvicorn's default config only configures its own loggers; ours
@@ -62,6 +62,7 @@ app.include_router(browse.router)
 app.include_router(coverage.router)
 app.include_router(advisory.router)
 app.include_router(farm_advisory.router)
+app.include_router(ui_advisory.router)
 
 
 @app.get("/health", tags=["meta"])
@@ -83,3 +84,9 @@ if _FRONTEND_DIR.exists():
     @app.get("/ui", include_in_schema=False)
     async def advisory_ui():
         return FileResponse(_FRONTEND_DIR / "advisory.html")
+
+    @app.get("/farm", include_in_schema=False)
+    async def farm_ui():
+        # Agri-integrated-style apple farm advisory tester (production
+        # /farm-advisory path — needs an apple farm in Supabase).
+        return FileResponse(_FRONTEND_DIR / "farm.html")

@@ -145,12 +145,14 @@ def _classification_from_declaration(
 # we fall back to LLM classification for those so the LLM picks the engine.
 _DOC_TYPE_ENGINE: dict[DocType, Engine] = {
     DocType.STAGE_DEFINITION:      Engine.STAGE,
-    DocType.IRRIGATION_PARAMETERS: Engine.IRRIGATION,
+    # IRRIGATION_PARAMETERS deliberately omitted — e2 removed for apple. Such
+    # docs (if uploaded) fall through to LLM classification.
     DocType.FERTIGATION_SCHEDULE:  Engine.NUTRITION,
-    DocType.IPM_SCHEDULE:          Engine.CROP_HEALTH,
-    DocType.PEST_DISEASE_CONDITION_RULE: Engine.CROP_HEALTH,
+    DocType.IPM_SCHEDULE:          Engine.PEST_DISEASE_RISK,
+    DocType.PEST_DISEASE_CONDITION_RULE: Engine.PEST_DISEASE_RISK,
     DocType.YIELD_PARAMETERS:      Engine.YIELD,
-    DocType.MARKET_DATA:           Engine.FINANCIAL,
+    # MARKET_DATA omitted — e6_financial removed for the apple build. Such
+    # docs (if uploaded) fall through to LLM classification.
 }
 
 

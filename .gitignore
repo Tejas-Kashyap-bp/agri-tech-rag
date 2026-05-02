@@ -18,3 +18,14 @@ test_*.json
 
 # Dummy data for pipeline testing — not for client delivery
 dummy_data/
+
+# React frontend build artifacts and deps
+frontend-react/node_modules/
+frontend-react/dist/
+frontend-react/chroma_db/
+
+# Excel lock files
+~$*.xlsx
+
+# Scratch / temporary scripts
+.tmp_*

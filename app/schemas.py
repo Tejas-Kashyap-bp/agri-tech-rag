@@ -19,11 +19,15 @@ from pydantic import BaseModel, Field
 
 class Engine(str, Enum):
     STAGE = "e1_stage"
-    IRRIGATION = "e2_irrigation"
+    # e2_irrigation removed for apple — perennial tree crops do not run the
+    # daily irrigation advisory. Slot intentionally left empty; do not reuse
+    # the e2 id for a different engine.
     NUTRITION = "e3_nutrition"
-    CROP_HEALTH = "e4_crop_health"
+    PEST_DISEASE_RISK = "e4_pest_disease_risk"
+    PEST_DISEASE_CURE = "e4_2_pest_disease_cure"
     YIELD = "e5_yield"
-    FINANCIAL = "e6_financial"
+    # e6_financial removed from the apple build — UI does not show a financial
+    # card. Do not reuse the e6 id for a different engine.
 
 
 class DocType(str, Enum):
@@ -79,18 +83,22 @@ REQUIRED_COVERAGE_SECTIONS: list[dict] = [
     {"key": "stage_definition",
      "label": "Crop Stage Definition",
      "doc_types": [DocType.STAGE_DEFINITION]},
-    {"key": "irrigation_parameters",
-     "label": "Irrigation Parameters (Kc, MAD, root depth)",
-     "doc_types": [DocType.IRRIGATION_PARAMETERS]},
+    # Irrigation Parameters (Kc, MAD, root depth) intentionally omitted for
+    # the apple build — E2 (irrigation) is removed for perennial tree crops
+    # (see app/advisory/engines.py and orchestrator notes), so the apple
+    # ingestion coverage no longer requires this section. Re-add when an
+    # irrigation-driven crop is onboarded.
     {"key": "fertigation_schedule",
      "label": "Fertilizer / Nutrient Schedule (INM)",
      "doc_types": [DocType.FERTIGATION_SCHEDULE]},
     {"key": "pest_disease_advisory",
      "label": "Pest & Disease Advisory",
      "doc_types": [DocType.IPM_SCHEDULE, DocType.PEST_DISEASE_CONDITION_RULE]},
-    {"key": "yield_parameters",
-     "label": "Yield Estimation Parameters (HI, Biomass)",
-     "doc_types": [DocType.YIELD_PARAMETERS]},
+    # Yield Estimation Parameters (HI, Biomass) intentionally omitted for
+    # the apple build — Engine 5 computes yield from tree geometry +
+    # satellite indices (see app/advisory/yield_layer.py), not from a
+    # Harvest-Index / biomass document. Re-add this entry if a non-tree
+    # crop is onboarded.
     {"key": "market_data",
      "label": "Financial / Market Data",
      "doc_types": [DocType.MARKET_DATA]},

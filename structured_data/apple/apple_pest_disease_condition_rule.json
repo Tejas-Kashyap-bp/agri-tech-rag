@@ -1,0 +1,1375 @@
+{
+  "crop": "apple",
+  "doc_type": "pest_disease_condition_rule",
+  "scope": "Real-time pest & disease risk prediction from weather. 68 rules covering 10 pests and 7 diseases across stages S1-S4.",
+  "stage_code_mapping": {
+    "S1": "Vegetative (Mar 1 - Apr 10)",
+    "S2": "Flowering (Apr 11 - May 10)",
+    "S3": "Fruiting (May 11 - Aug 15)",
+    "S4": "Harvesting (Aug 16 - Nov 30)",
+    "S5": "Dormancy (Dec 1 - Feb 28) - no entries"
+  },
+  "evaluation_logic": "A rule triggers when current_temp_c is within [temp_c.min,temp_c.max] AND current_humidity_pct is within [humidity_pct.min,humidity_pct.max] AND the recent conducive-condition duration sits within [conducive_duration_hrs.min,conducive_duration_hrs.max]. A triggered rule contributes its base_risk_pct.",
+  "rules": [
+    {
+      "organism_name": "Alternaria Leaf Blotch",
+      "organism_type": "disease",
+      "stage_code": "S1",
+      "stage_name": "Vegetative",
+      "calendar_window": "March-10 April",
+      "temp_c": {
+        "min": 15,
+        "max": 22
+      },
+      "humidity_pct": {
+        "min": 75,
+        "max": 95
+      },
+      "conducive_duration_hrs": {
+        "min": 8,
+        "max": 10
+      },
+      "base_risk_pct": 35
+    },
+    {
+      "organism_name": "Alternaria Leaf Blotch",
+      "organism_type": "disease",
+      "stage_code": "S2",
+      "stage_name": "Flowering",
+      "calendar_window": "11 April- 10 May",
+      "temp_c": {
+        "min": 18,
+        "max": 25
+      },
+      "humidity_pct": {
+        "min": 80,
+        "max": 95
+      },
+      "conducive_duration_hrs": {
+        "min": 8,
+        "max": 12
+      },
+      "base_risk_pct": 45
+    },
+    {
+      "organism_name": "Alternaria Leaf Blotch",
+      "organism_type": "disease",
+      "stage_code": "S3",
+      "stage_name": "Fruiting",
+      "calendar_window": "11 May- 15 Aug",
+      "temp_c": {
+        "min": 20,
+        "max": 30
+      },
+      "humidity_pct": {
+        "min": 80,
+        "max": 100
+      },
+      "conducive_duration_hrs": {
+        "min": 10,
+        "max": 16
+      },
+      "base_risk_pct": 75
+    },
+    {
+      "organism_name": "Alternaria Leaf Blotch",
+      "organism_type": "disease",
+      "stage_code": "S4",
+      "stage_name": "Harvesting",
+      "calendar_window": "16 Aug-Nov",
+      "temp_c": {
+        "min": 18,
+        "max": 28
+      },
+      "humidity_pct": {
+        "min": 75,
+        "max": 95
+      },
+      "conducive_duration_hrs": {
+        "min": 8,
+        "max": 12
+      },
+      "base_risk_pct": 50
+    },
+    {
+      "organism_name": "Aphids / Green Apple Aphid",
+      "organism_type": "pest",
+      "stage_code": "S1",
+      "stage_name": "Vegetative",
+      "calendar_window": "March-10 April",
+      "temp_c": {
+        "min": 10,
+        "max": 20
+      },
+      "humidity_pct": {
+        "min": 55,
+        "max": 85
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 8
+      },
+      "base_risk_pct": 55
+    },
+    {
+      "organism_name": "Aphids / Green Apple Aphid",
+      "organism_type": "pest",
+      "stage_code": "S2",
+      "stage_name": "Flowering",
+      "calendar_window": "11 April- 10 May",
+      "temp_c": {
+        "min": 15,
+        "max": 25
+      },
+      "humidity_pct": {
+        "min": 55,
+        "max": 90
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 10
+      },
+      "base_risk_pct": 75
+    },
+    {
+      "organism_name": "Aphids / Green Apple Aphid",
+      "organism_type": "pest",
+      "stage_code": "S3",
+      "stage_name": "Fruiting",
+      "calendar_window": "11 May- 15 Aug",
+      "temp_c": {
+        "min": 18,
+        "max": 28
+      },
+      "humidity_pct": {
+        "min": 50,
+        "max": 85
+      },
+      "conducive_duration_hrs": {
+        "min": 8,
+        "max": 12
+      },
+      "base_risk_pct": 70
+    },
+    {
+      "organism_name": "Aphids / Green Apple Aphid",
+      "organism_type": "pest",
+      "stage_code": "S4",
+      "stage_name": "Harvesting",
+      "calendar_window": "16 Aug-Nov",
+      "temp_c": {
+        "min": 10,
+        "max": 24
+      },
+      "humidity_pct": {
+        "min": 50,
+        "max": 80
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 8
+      },
+      "base_risk_pct": 40
+    },
+    {
+      "organism_name": "Apple Leaf Miner",
+      "organism_type": "pest",
+      "stage_code": "S1",
+      "stage_name": "Vegetative",
+      "calendar_window": "March-10 April",
+      "temp_c": {
+        "min": 10,
+        "max": 20
+      },
+      "humidity_pct": {
+        "min": 50,
+        "max": 80
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 8
+      },
+      "base_risk_pct": 40
+    },
+    {
+      "organism_name": "Apple Leaf Miner",
+      "organism_type": "pest",
+      "stage_code": "S2",
+      "stage_name": "Flowering",
+      "calendar_window": "11 April- 10 May",
+      "temp_c": {
+        "min": 15,
+        "max": 25
+      },
+      "humidity_pct": {
+        "min": 50,
+        "max": 85
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 10
+      },
+      "base_risk_pct": 60
+    },
+    {
+      "organism_name": "Apple Leaf Miner",
+      "organism_type": "pest",
+      "stage_code": "S3",
+      "stage_name": "Fruiting",
+      "calendar_window": "11 May- 15 Aug",
+      "temp_c": {
+        "min": 20,
+        "max": 30
+      },
+      "humidity_pct": {
+        "min": 55,
+        "max": 85
+      },
+      "conducive_duration_hrs": {
+        "min": 8,
+        "max": 12
+      },
+      "base_risk_pct": 75
+    },
+    {
+      "organism_name": "Apple Leaf Miner",
+      "organism_type": "pest",
+      "stage_code": "S4",
+      "stage_name": "Harvesting",
+      "calendar_window": "16 Aug-Nov",
+      "temp_c": {
+        "min": 15,
+        "max": 28
+      },
+      "humidity_pct": {
+        "min": 50,
+        "max": 85
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 10
+      },
+      "base_risk_pct": 55
+    },
+    {
+      "organism_name": "Apple Scab",
+      "organism_type": "disease",
+      "stage_code": "S1",
+      "stage_name": "Vegetative",
+      "calendar_window": "March-10 April",
+      "temp_c": {
+        "min": 10,
+        "max": 20
+      },
+      "humidity_pct": {
+        "min": 85,
+        "max": 100
+      },
+      "conducive_duration_hrs": {
+        "min": 9,
+        "max": 12
+      },
+      "base_risk_pct": 60
+    },
+    {
+      "organism_name": "Apple Scab",
+      "organism_type": "disease",
+      "stage_code": "S2",
+      "stage_name": "Flowering",
+      "calendar_window": "11 April- 10 May",
+      "temp_c": {
+        "min": 12,
+        "max": 24
+      },
+      "humidity_pct": {
+        "min": 85,
+        "max": 100
+      },
+      "conducive_duration_hrs": {
+        "min": 9,
+        "max": 16
+      },
+      "base_risk_pct": 80
+    },
+    {
+      "organism_name": "Apple Scab",
+      "organism_type": "disease",
+      "stage_code": "S3",
+      "stage_name": "Fruiting",
+      "calendar_window": "11 May- 15 Aug",
+      "temp_c": {
+        "min": 15,
+        "max": 25
+      },
+      "humidity_pct": {
+        "min": 80,
+        "max": 100
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 12
+      },
+      "base_risk_pct": 70
+    },
+    {
+      "organism_name": "Apple Scab",
+      "organism_type": "disease",
+      "stage_code": "S4",
+      "stage_name": "Harvesting",
+      "calendar_window": "16 Aug-Nov",
+      "temp_c": {
+        "min": 10,
+        "max": 22
+      },
+      "humidity_pct": {
+        "min": 80,
+        "max": 100
+      },
+      "conducive_duration_hrs": {
+        "min": 8,
+        "max": 12
+      },
+      "base_risk_pct": 40
+    },
+    {
+      "organism_name": "Apple Stem Borer",
+      "organism_type": "pest",
+      "stage_code": "S1",
+      "stage_name": "Vegetative",
+      "calendar_window": "March-10 April",
+      "temp_c": {
+        "min": 10,
+        "max": 20
+      },
+      "humidity_pct": {
+        "min": 45,
+        "max": 75
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 8
+      },
+      "base_risk_pct": 30
+    },
+    {
+      "organism_name": "Apple Stem Borer",
+      "organism_type": "pest",
+      "stage_code": "S2",
+      "stage_name": "Flowering",
+      "calendar_window": "11 April- 10 May",
+      "temp_c": {
+        "min": 15,
+        "max": 25
+      },
+      "humidity_pct": {
+        "min": 45,
+        "max": 80
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 10
+      },
+      "base_risk_pct": 45
+    },
+    {
+      "organism_name": "Apple Stem Borer",
+      "organism_type": "pest",
+      "stage_code": "S3",
+      "stage_name": "Fruiting",
+      "calendar_window": "11 May- 15 Aug",
+      "temp_c": {
+        "min": 20,
+        "max": 32
+      },
+      "humidity_pct": {
+        "min": 45,
+        "max": 85
+      },
+      "conducive_duration_hrs": {
+        "min": 8,
+        "max": 12
+      },
+      "base_risk_pct": 70
+    },
+    {
+      "organism_name": "Apple Stem Borer",
+      "organism_type": "pest",
+      "stage_code": "S4",
+      "stage_name": "Harvesting",
+      "calendar_window": "16 Aug-Nov",
+      "temp_c": {
+        "min": 15,
+        "max": 28
+      },
+      "humidity_pct": {
+        "min": 45,
+        "max": 80
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 10
+      },
+      "base_risk_pct": 60
+    },
+    {
+      "organism_name": "Codling Moth",
+      "organism_type": "pest",
+      "stage_code": "S1",
+      "stage_name": "Vegetative",
+      "calendar_window": "March-10 April",
+      "temp_c": {
+        "min": 8,
+        "max": 18
+      },
+      "humidity_pct": {
+        "min": 45,
+        "max": 75
+      },
+      "conducive_duration_hrs": {
+        "min": 4,
+        "max": 6
+      },
+      "base_risk_pct": 25
+    },
+    {
+      "organism_name": "Codling Moth",
+      "organism_type": "pest",
+      "stage_code": "S2",
+      "stage_name": "Flowering",
+      "calendar_window": "11 April- 10 May",
+      "temp_c": {
+        "min": 12,
+        "max": 24
+      },
+      "humidity_pct": {
+        "min": 45,
+        "max": 80
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 8
+      },
+      "base_risk_pct": 50
+    },
+    {
+      "organism_name": "Codling Moth",
+      "organism_type": "pest",
+      "stage_code": "S3",
+      "stage_name": "Fruiting",
+      "calendar_window": "11 May- 15 Aug",
+      "temp_c": {
+        "min": 18,
+        "max": 30
+      },
+      "humidity_pct": {
+        "min": 50,
+        "max": 80
+      },
+      "conducive_duration_hrs": {
+        "min": 8,
+        "max": 12
+      },
+      "base_risk_pct": 80
+    },
+    {
+      "organism_name": "Codling Moth",
+      "organism_type": "pest",
+      "stage_code": "S4",
+      "stage_name": "Harvesting",
+      "calendar_window": "16 Aug-Nov",
+      "temp_c": {
+        "min": 15,
+        "max": 28
+      },
+      "humidity_pct": {
+        "min": 45,
+        "max": 75
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 10
+      },
+      "base_risk_pct": 65
+    },
+    {
+      "organism_name": "Collar Rot / Crown Rot",
+      "organism_type": "disease",
+      "stage_code": "S1",
+      "stage_name": "Vegetative",
+      "calendar_window": "March-10 April",
+      "temp_c": {
+        "min": 10,
+        "max": 20
+      },
+      "humidity_pct": {
+        "min": 80,
+        "max": 100
+      },
+      "conducive_duration_hrs": {
+        "min": 24,
+        "max": 48
+      },
+      "base_risk_pct": 40
+    },
+    {
+      "organism_name": "Collar Rot / Crown Rot",
+      "organism_type": "disease",
+      "stage_code": "S2",
+      "stage_name": "Flowering",
+      "calendar_window": "11 April- 10 May",
+      "temp_c": {
+        "min": 12,
+        "max": 22
+      },
+      "humidity_pct": {
+        "min": 80,
+        "max": 100
+      },
+      "conducive_duration_hrs": {
+        "min": 24,
+        "max": 48
+      },
+      "base_risk_pct": 45
+    },
+    {
+      "organism_name": "Collar Rot / Crown Rot",
+      "organism_type": "disease",
+      "stage_code": "S3",
+      "stage_name": "Fruiting",
+      "calendar_window": "11 May- 15 Aug",
+      "temp_c": {
+        "min": 15,
+        "max": 28
+      },
+      "humidity_pct": {
+        "min": 85,
+        "max": 100
+      },
+      "conducive_duration_hrs": {
+        "min": 24,
+        "max": 72
+      },
+      "base_risk_pct": 75
+    },
+    {
+      "organism_name": "Collar Rot / Crown Rot",
+      "organism_type": "disease",
+      "stage_code": "S4",
+      "stage_name": "Harvesting",
+      "calendar_window": "16 Aug-Nov",
+      "temp_c": {
+        "min": 10,
+        "max": 24
+      },
+      "humidity_pct": {
+        "min": 80,
+        "max": 100
+      },
+      "conducive_duration_hrs": {
+        "min": 24,
+        "max": 48
+      },
+      "base_risk_pct": 60
+    },
+    {
+      "organism_name": "European Red Mite",
+      "organism_type": "pest",
+      "stage_code": "S1",
+      "stage_name": "Vegetative",
+      "calendar_window": "March-10 April",
+      "temp_c": {
+        "min": 10,
+        "max": 20
+      },
+      "humidity_pct": {
+        "min": 40,
+        "max": 75
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 8
+      },
+      "base_risk_pct": 40
+    },
+    {
+      "organism_name": "European Red Mite",
+      "organism_type": "pest",
+      "stage_code": "S2",
+      "stage_name": "Flowering",
+      "calendar_window": "11 April- 10 May",
+      "temp_c": {
+        "min": 15,
+        "max": 25
+      },
+      "humidity_pct": {
+        "min": 40,
+        "max": 75
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 10
+      },
+      "base_risk_pct": 55
+    },
+    {
+      "organism_name": "European Red Mite",
+      "organism_type": "pest",
+      "stage_code": "S3",
+      "stage_name": "Fruiting",
+      "calendar_window": "11 May- 15 Aug",
+      "temp_c": {
+        "min": 20,
+        "max": 32
+      },
+      "humidity_pct": {
+        "min": 35,
+        "max": 70
+      },
+      "conducive_duration_hrs": {
+        "min": 8,
+        "max": 12
+      },
+      "base_risk_pct": 80
+    },
+    {
+      "organism_name": "European Red Mite",
+      "organism_type": "pest",
+      "stage_code": "S4",
+      "stage_name": "Harvesting",
+      "calendar_window": "16 Aug-Nov",
+      "temp_c": {
+        "min": 15,
+        "max": 28
+      },
+      "humidity_pct": {
+        "min": 40,
+        "max": 75
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 10
+      },
+      "base_risk_pct": 60
+    },
+    {
+      "organism_name": "Fruit Fly",
+      "organism_type": "pest",
+      "stage_code": "S1",
+      "stage_name": "Vegetative",
+      "calendar_window": "March-10 April",
+      "temp_c": {
+        "min": 10,
+        "max": 20
+      },
+      "humidity_pct": {
+        "min": 50,
+        "max": 75
+      },
+      "conducive_duration_hrs": {
+        "min": 4,
+        "max": 6
+      },
+      "base_risk_pct": 15
+    },
+    {
+      "organism_name": "Fruit Fly",
+      "organism_type": "pest",
+      "stage_code": "S2",
+      "stage_name": "Flowering",
+      "calendar_window": "11 April- 10 May",
+      "temp_c": {
+        "min": 15,
+        "max": 24
+      },
+      "humidity_pct": {
+        "min": 55,
+        "max": 80
+      },
+      "conducive_duration_hrs": {
+        "min": 4,
+        "max": 6
+      },
+      "base_risk_pct": 20
+    },
+    {
+      "organism_name": "Fruit Fly",
+      "organism_type": "pest",
+      "stage_code": "S3",
+      "stage_name": "Fruiting",
+      "calendar_window": "11 May- 15 Aug",
+      "temp_c": {
+        "min": 20,
+        "max": 30
+      },
+      "humidity_pct": {
+        "min": 60,
+        "max": 90
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 10
+      },
+      "base_risk_pct": 50
+    },
+    {
+      "organism_name": "Fruit Fly",
+      "organism_type": "pest",
+      "stage_code": "S4",
+      "stage_name": "Harvesting",
+      "calendar_window": "16 Aug-Nov",
+      "temp_c": {
+        "min": 18,
+        "max": 28
+      },
+      "humidity_pct": {
+        "min": 60,
+        "max": 90
+      },
+      "conducive_duration_hrs": {
+        "min": 8,
+        "max": 12
+      },
+      "base_risk_pct": 75
+    },
+    {
+      "organism_name": "Marssonina Leaf Blotch / Premature Leaf Fall",
+      "organism_type": "disease",
+      "stage_code": "S1",
+      "stage_name": "Vegetative",
+      "calendar_window": "March-10 April",
+      "temp_c": {
+        "min": 12,
+        "max": 20
+      },
+      "humidity_pct": {
+        "min": 75,
+        "max": 90
+      },
+      "conducive_duration_hrs": {
+        "min": 8,
+        "max": 10
+      },
+      "base_risk_pct": 30
+    },
+    {
+      "organism_name": "Marssonina Leaf Blotch / Premature Leaf Fall",
+      "organism_type": "disease",
+      "stage_code": "S2",
+      "stage_name": "Flowering",
+      "calendar_window": "11 April- 10 May",
+      "temp_c": {
+        "min": 15,
+        "max": 22
+      },
+      "humidity_pct": {
+        "min": 80,
+        "max": 95
+      },
+      "conducive_duration_hrs": {
+        "min": 8,
+        "max": 12
+      },
+      "base_risk_pct": 40
+    },
+    {
+      "organism_name": "Marssonina Leaf Blotch / Premature Leaf Fall",
+      "organism_type": "disease",
+      "stage_code": "S3",
+      "stage_name": "Fruiting",
+      "calendar_window": "11 May- 15 Aug",
+      "temp_c": {
+        "min": 18,
+        "max": 28
+      },
+      "humidity_pct": {
+        "min": 85,
+        "max": 100
+      },
+      "conducive_duration_hrs": {
+        "min": 10,
+        "max": 16
+      },
+      "base_risk_pct": 80
+    },
+    {
+      "organism_name": "Marssonina Leaf Blotch / Premature Leaf Fall",
+      "organism_type": "disease",
+      "stage_code": "S4",
+      "stage_name": "Harvesting",
+      "calendar_window": "16 Aug-Nov",
+      "temp_c": {
+        "min": 15,
+        "max": 25
+      },
+      "humidity_pct": {
+        "min": 85,
+        "max": 100
+      },
+      "conducive_duration_hrs": {
+        "min": 10,
+        "max": 14
+      },
+      "base_risk_pct": 70
+    },
+    {
+      "organism_name": "Powdery Mildew",
+      "organism_type": "disease",
+      "stage_code": "S1",
+      "stage_name": "Vegetative",
+      "calendar_window": "March-10 April",
+      "temp_c": {
+        "min": 10,
+        "max": 22
+      },
+      "humidity_pct": {
+        "min": 60,
+        "max": 90
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 8
+      },
+      "base_risk_pct": 60
+    },
+    {
+      "organism_name": "Powdery Mildew",
+      "organism_type": "disease",
+      "stage_code": "S2",
+      "stage_name": "Flowering",
+      "calendar_window": "11 April- 10 May",
+      "temp_c": {
+        "min": 12,
+        "max": 25
+      },
+      "humidity_pct": {
+        "min": 60,
+        "max": 90
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 10
+      },
+      "base_risk_pct": 75
+    },
+    {
+      "organism_name": "Powdery Mildew",
+      "organism_type": "disease",
+      "stage_code": "S3",
+      "stage_name": "Fruiting",
+      "calendar_window": "11 May- 15 Aug",
+      "temp_c": {
+        "min": 15,
+        "max": 18
+      },
+      "humidity_pct": {
+        "min": 55,
+        "max": 85
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 8
+      },
+      "base_risk_pct": 65
+    },
+    {
+      "organism_name": "Powdery Mildew",
+      "organism_type": "disease",
+      "stage_code": "S4",
+      "stage_name": "Harvesting",
+      "calendar_window": "16 Aug-Nov",
+      "temp_c": {
+        "min": 10,
+        "max": 22
+      },
+      "humidity_pct": {
+        "min": 60,
+        "max": 85
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 8
+      },
+      "base_risk_pct": 35
+    },
+    {
+      "organism_name": "Root Rot",
+      "organism_type": "disease",
+      "stage_code": "S1",
+      "stage_name": "Vegetative",
+      "calendar_window": "March-10 April",
+      "temp_c": {
+        "min": 10,
+        "max": 20
+      },
+      "humidity_pct": {
+        "min": 80,
+        "max": 100
+      },
+      "conducive_duration_hrs": {
+        "min": 24,
+        "max": 48
+      },
+      "base_risk_pct": 40
+    },
+    {
+      "organism_name": "Root Rot",
+      "organism_type": "disease",
+      "stage_code": "S2",
+      "stage_name": "Flowering",
+      "calendar_window": "11 April- 10 May",
+      "temp_c": {
+        "min": 12,
+        "max": 24
+      },
+      "humidity_pct": {
+        "min": 80,
+        "max": 100
+      },
+      "conducive_duration_hrs": {
+        "min": 24,
+        "max": 48
+      },
+      "base_risk_pct": 45
+    },
+    {
+      "organism_name": "Root Rot",
+      "organism_type": "disease",
+      "stage_code": "S3",
+      "stage_name": "Fruiting",
+      "calendar_window": "11 May- 15 Aug",
+      "temp_c": {
+        "min": 15,
+        "max": 28
+      },
+      "humidity_pct": {
+        "min": 85,
+        "max": 100
+      },
+      "conducive_duration_hrs": {
+        "min": 48,
+        "max": 72
+      },
+      "base_risk_pct": 75
+    },
+    {
+      "organism_name": "Root Rot",
+      "organism_type": "disease",
+      "stage_code": "S4",
+      "stage_name": "Harvesting",
+      "calendar_window": "16 Aug-Nov",
+      "temp_c": {
+        "min": 10,
+        "max": 24
+      },
+      "humidity_pct": {
+        "min": 80,
+        "max": 100
+      },
+      "conducive_duration_hrs": {
+        "min": 24,
+        "max": 72
+      },
+      "base_risk_pct": 60
+    },
+    {
+      "organism_name": "San Jose Scale",
+      "organism_type": "pest",
+      "stage_code": "S1",
+      "stage_name": "Vegetative",
+      "calendar_window": "March-10 April",
+      "temp_c": {
+        "min": 10,
+        "max": 20
+      },
+      "humidity_pct": {
+        "min": 50,
+        "max": 80
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 8
+      },
+      "base_risk_pct": 50
+    },
+    {
+      "organism_name": "San Jose Scale",
+      "organism_type": "pest",
+      "stage_code": "S2",
+      "stage_name": "Flowering",
+      "calendar_window": "11 April- 10 May",
+      "temp_c": {
+        "min": 15,
+        "max": 25
+      },
+      "humidity_pct": {
+        "min": 50,
+        "max": 85
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 10
+      },
+      "base_risk_pct": 65
+    },
+    {
+      "organism_name": "San Jose Scale",
+      "organism_type": "pest",
+      "stage_code": "S3",
+      "stage_name": "Fruiting",
+      "calendar_window": "11 May- 15 Aug",
+      "temp_c": {
+        "min": 20,
+        "max": 30
+      },
+      "humidity_pct": {
+        "min": 55,
+        "max": 85
+      },
+      "conducive_duration_hrs": {
+        "min": 8,
+        "max": 12
+      },
+      "base_risk_pct": 80
+    },
+    {
+      "organism_name": "San Jose Scale",
+      "organism_type": "pest",
+      "stage_code": "S4",
+      "stage_name": "Harvesting",
+      "calendar_window": "16 Aug-Nov",
+      "temp_c": {
+        "min": 15,
+        "max": 28
+      },
+      "humidity_pct": {
+        "min": 50,
+        "max": 80
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 10
+      },
+      "base_risk_pct": 70
+    },
+    {
+      "organism_name": "Sooty Blotch and Flyspeck",
+      "organism_type": "disease",
+      "stage_code": "S1",
+      "stage_name": "Vegetative",
+      "calendar_window": "March-10 April",
+      "temp_c": {
+        "min": 10,
+        "max": 20
+      },
+      "humidity_pct": {
+        "min": 75,
+        "max": 90
+      },
+      "conducive_duration_hrs": {
+        "min": 8,
+        "max": 12
+      },
+      "base_risk_pct": 25
+    },
+    {
+      "organism_name": "Sooty Blotch and Flyspeck",
+      "organism_type": "disease",
+      "stage_code": "S2",
+      "stage_name": "Flowering",
+      "calendar_window": "11 April- 10 May",
+      "temp_c": {
+        "min": 12,
+        "max": 24
+      },
+      "humidity_pct": {
+        "min": 80,
+        "max": 95
+      },
+      "conducive_duration_hrs": {
+        "min": 10,
+        "max": 12
+      },
+      "base_risk_pct": 35
+    },
+    {
+      "organism_name": "Sooty Blotch and Flyspeck",
+      "organism_type": "disease",
+      "stage_code": "S3",
+      "stage_name": "Fruiting",
+      "calendar_window": "11 May- 15 Aug",
+      "temp_c": {
+        "min": 18,
+        "max": 28
+      },
+      "humidity_pct": {
+        "min": 85,
+        "max": 100
+      },
+      "conducive_duration_hrs": {
+        "min": 12,
+        "max": 24
+      },
+      "base_risk_pct": 75
+    },
+    {
+      "organism_name": "Sooty Blotch and Flyspeck",
+      "organism_type": "disease",
+      "stage_code": "S4",
+      "stage_name": "Harvesting",
+      "calendar_window": "16 Aug-Nov",
+      "temp_c": {
+        "min": 15,
+        "max": 25
+      },
+      "humidity_pct": {
+        "min": 85,
+        "max": 100
+      },
+      "conducive_duration_hrs": {
+        "min": 12,
+        "max": 24
+      },
+      "base_risk_pct": 80
+    },
+    {
+      "organism_name": "Tent Caterpillar / Defoliating Caterpillar",
+      "organism_type": "pest",
+      "stage_code": "S1",
+      "stage_name": "Vegetative",
+      "calendar_window": "March-10 April",
+      "temp_c": {
+        "min": 10,
+        "max": 20
+      },
+      "humidity_pct": {
+        "min": 50,
+        "max": 80
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 8
+      },
+      "base_risk_pct": 50
+    },
+    {
+      "organism_name": "Tent Caterpillar / Defoliating Caterpillar",
+      "organism_type": "pest",
+      "stage_code": "S2",
+      "stage_name": "Flowering",
+      "calendar_window": "11 April- 10 May",
+      "temp_c": {
+        "min": 15,
+        "max": 25
+      },
+      "humidity_pct": {
+        "min": 50,
+        "max": 85
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 10
+      },
+      "base_risk_pct": 70
+    },
+    {
+      "organism_name": "Tent Caterpillar / Defoliating Caterpillar",
+      "organism_type": "pest",
+      "stage_code": "S3",
+      "stage_name": "Fruiting",
+      "calendar_window": "11 May- 15 Aug",
+      "temp_c": {
+        "min": 20,
+        "max": 30
+      },
+      "humidity_pct": {
+        "min": 55,
+        "max": 85
+      },
+      "conducive_duration_hrs": {
+        "min": 8,
+        "max": 12
+      },
+      "base_risk_pct": 75
+    },
+    {
+      "organism_name": "Tent Caterpillar / Defoliating Caterpillar",
+      "organism_type": "pest",
+      "stage_code": "S4",
+      "stage_name": "Harvesting",
+      "calendar_window": "16 Aug-Nov",
+      "temp_c": {
+        "min": 15,
+        "max": 28
+      },
+      "humidity_pct": {
+        "min": 50,
+        "max": 80
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 10
+      },
+      "base_risk_pct": 50
+    },
+    {
+      "organism_name": "Thrips",
+      "organism_type": "pest",
+      "stage_code": "S1",
+      "stage_name": "Vegetative",
+      "calendar_window": "March-10 April",
+      "temp_c": {
+        "min": 12,
+        "max": 22
+      },
+      "humidity_pct": {
+        "min": 40,
+        "max": 70
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 8
+      },
+      "base_risk_pct": 45
+    },
+    {
+      "organism_name": "Thrips",
+      "organism_type": "pest",
+      "stage_code": "S2",
+      "stage_name": "Flowering",
+      "calendar_window": "11 April- 10 May",
+      "temp_c": {
+        "min": 15,
+        "max": 28
+      },
+      "humidity_pct": {
+        "min": 40,
+        "max": 75
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 10
+      },
+      "base_risk_pct": 75
+    },
+    {
+      "organism_name": "Thrips",
+      "organism_type": "pest",
+      "stage_code": "S3",
+      "stage_name": "Fruiting",
+      "calendar_window": "11 May- 15 Aug",
+      "temp_c": {
+        "min": 20,
+        "max": 32
+      },
+      "humidity_pct": {
+        "min": 35,
+        "max": 70
+      },
+      "conducive_duration_hrs": {
+        "min": 8,
+        "max": 12
+      },
+      "base_risk_pct": 70
+    },
+    {
+      "organism_name": "Thrips",
+      "organism_type": "pest",
+      "stage_code": "S4",
+      "stage_name": "Harvesting",
+      "calendar_window": "16 Aug-Nov",
+      "temp_c": {
+        "min": 15,
+        "max": 28
+      },
+      "humidity_pct": {
+        "min": 40,
+        "max": 75
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 8
+      },
+      "base_risk_pct": 40
+    },
+    {
+      "organism_name": "Woolly Apple Aphid",
+      "organism_type": "pest",
+      "stage_code": "S1",
+      "stage_name": "Vegetative",
+      "calendar_window": "March-10 April",
+      "temp_c": {
+        "min": 10,
+        "max": 20
+      },
+      "humidity_pct": {
+        "min": 50,
+        "max": 80
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 8
+      },
+      "base_risk_pct": 45
+    },
+    {
+      "organism_name": "Woolly Apple Aphid",
+      "organism_type": "pest",
+      "stage_code": "S2",
+      "stage_name": "Flowering",
+      "calendar_window": "11 April- 10 May",
+      "temp_c": {
+        "min": 15,
+        "max": 25
+      },
+      "humidity_pct": {
+        "min": 55,
+        "max": 85
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 10
+      },
+      "base_risk_pct": 65
+    },
+    {
+      "organism_name": "Woolly Apple Aphid",
+      "organism_type": "pest",
+      "stage_code": "S3",
+      "stage_name": "Fruiting",
+      "calendar_window": "11 May- 15 Aug",
+      "temp_c": {
+        "min": 18,
+        "max": 28
+      },
+      "humidity_pct": {
+        "min": 60,
+        "max": 90
+      },
+      "conducive_duration_hrs": {
+        "min": 8,
+        "max": 12
+      },
+      "base_risk_pct": 80
+    },
+    {
+      "organism_name": "Woolly Apple Aphid",
+      "organism_type": "pest",
+      "stage_code": "S4",
+      "stage_name": "Harvesting",
+      "calendar_window": "16 Aug-Nov",
+      "temp_c": {
+        "min": 12,
+        "max": 25
+      },
+      "humidity_pct": {
+        "min": 55,
+        "max": 85
+      },
+      "conducive_duration_hrs": {
+        "min": 6,
+        "max": 10
+      },
+      "base_risk_pct": 60
+    }
+  ]
+}

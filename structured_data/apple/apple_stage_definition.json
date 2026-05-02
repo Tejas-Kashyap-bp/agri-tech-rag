@@ -1,0 +1,59 @@
+{
+  "crop": "apple",
+  "doc_type": "stage_definition",
+  "total_season_days": 365,
+  "season_anchor": "March 1 (day 1 of perennial cycle)",
+  "notes": "Apple is perennial; stages are calendar-based, not days-after-sowing. The start_das/end_das fields encode day-of-perennial-cycle counted from March 1 = day 1 through end of February = day 365, so the existing stage_definition schema (continuity + non-overlap on integer day bounds) applies unchanged. Date ranges per stage are sourced from 'Master data Apple Insect pest.xlsx' (Crop Age column), which is internally consistent across all 10 pests x 4 stages (40 rows). The Dec-Feb window is uncovered by the source sheet and is named 'dormancy' (standard horticultural term for the leafless, no-active-growth period when pruning, dormant sprays, and chilling-hour accumulation occur).",
+  "stages": [
+    {
+      "stage_code": "S1",
+      "stage_name": "Vegetative",
+      "start_das": 1,
+      "end_das": 41,
+      "calendar_start": "March 1",
+      "calendar_end": "April 10",
+      "description": "Bud break and shoot extension. New leaves expand and the canopy rebuilds after dormancy. High nitrogen demand begins.",
+      "key_events": ["bud break", "shoot extension", "leaf expansion"]
+    },
+    {
+      "stage_code": "S2",
+      "stage_name": "Flowering",
+      "start_das": 42,
+      "end_das": 71,
+      "calendar_start": "April 11",
+      "calendar_end": "May 10",
+      "description": "Bloom and pollination. Pink bud through petal fall. Critical period for pollinator activity and frost risk.",
+      "key_events": ["pink bud", "full bloom", "petal fall", "pollination"]
+    },
+    {
+      "stage_code": "S3",
+      "stage_name": "Fruiting",
+      "start_das": 72,
+      "end_das": 168,
+      "calendar_start": "May 11",
+      "calendar_end": "August 15",
+      "description": "Fruit set, cell division, and fruit expansion. Highest water and nutrient demand of the season; primary pest pressure window.",
+      "key_events": ["fruit set", "June drop", "cell expansion", "fruit sizing"]
+    },
+    {
+      "stage_code": "S4",
+      "stage_name": "Harvesting",
+      "start_das": 169,
+      "end_das": 275,
+      "calendar_start": "August 16",
+      "calendar_end": "November 30",
+      "description": "Fruit maturation, colour development, and harvest. Cultivar-specific pick windows fall inside this range.",
+      "key_events": ["maturation", "colour break", "harvest", "post-harvest leaf fall"]
+    },
+    {
+      "stage_code": "S5",
+      "stage_name": "Dormancy",
+      "start_das": 276,
+      "end_das": 365,
+      "calendar_start": "December 1",
+      "calendar_end": "February 28",
+      "description": "Leafless dormancy. No active growth. Window for pruning, dormant-season sprays, and chilling-hour accumulation. Pest sheet does not cover this period; advisory engines should return dormancy-appropriate guidance (pruning, dormant spray) rather than active pest/nutrition recommendations.",
+      "key_events": ["leaf fall complete", "pruning", "dormant spray", "chilling accumulation"]
+    }
+  ]
+}

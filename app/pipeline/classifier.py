@@ -25,7 +25,10 @@ BLOCK = "LLM Classification Layer"
 _SYSTEM = """You are an agricultural document classifier.
 Classify the given document and return a JSON object with exactly these keys:
 
-  engine:     one of [e1_stage, e2_irrigation, e3_nutrition, e4_crop_health, e5_yield, e6_financial]
+  engine:     one of [e1_stage, e3_nutrition, e4_pest_disease_risk, e5_yield]
+              (e2_irrigation and e6_financial have been removed — apple is
+              perennial and does not run a daily irrigation advisory, and the
+              UI no longer surfaces a financial card)
 
   crop:       the crop name in lowercase (e.g. "maize", "apple", "sugarcane").
               Use "common" if the document is NOT specific to any one crop —

@@ -3,8 +3,8 @@ Unit tests for the advisory orchestrator's deadline math.
 
 WHY this exists:
   The 3-tier orchestrator has hardcoded budget arithmetic spread across three
-  blocks. If the deadline accounting drifts, tier-3 (E6 financial) is the
-  first to silently get skipped — and a missing financial slot looks like
+  blocks. If the deadline accounting drifts, tier-3 (E4.2 cure) is the first
+  to silently get skipped — and a missing pest_disease_cure slot looks like
   "no advice produced," not like "we ran out of time." That's a bad failure
   mode to ship without tests.
 
@@ -52,21 +52,21 @@ def test_all_engines_run_when_deadline_is_generous(monkeypatch):
 
     result = asyncio.run(adv_orch.generate_advisories(_make_ctx(), k=1))
 
-    # All six engines should have been invoked.
+    # All five engines should have been invoked (e2 + e6 removed for apple).
     assert set(calls) == {
-        "e1_stage", "e2_irrigation", "e3_nutrition",
-        "e4_crop_health", "e5_yield", "e6_financial",
+        "e1_stage", "e3_nutrition",
+        "e4_pest_disease_risk", "e4_2_pest_disease_cure", "e5_yield",
     }
     # Output keys correctly populated.
-    for key in ("stage", "irrigation", "fertilizer",
-                "crop_protection", "yield", "financial"):
+    for key in ("stage", "fertilizer",
+                "pest_disease_risk", "pest_disease_cure", "yield"):
         assert key in result
         assert result[key]["status"] == "ok"
 
 
 def test_tier3_gets_deadline_stub_when_budget_exhausted(monkeypatch):
     # Force REQUEST_DEADLINE_S so low that by the time tier-2 finishes,
-    # there is no budget left for tier-3 (E6).
+    # there is no budget left for tier-3 (E4.2).
     monkeypatch.setattr(adv_orch, "REQUEST_DEADLINE_S", 0.05)
     monkeypatch.setattr(adv_orch, "PER_ENGINE_TIMEOUT_S", 0.05)
 
@@ -83,10 +83,10 @@ def test_tier3_gets_deadline_stub_when_budget_exhausted(monkeypatch):
 
     result = asyncio.run(adv_orch.generate_advisories(_make_ctx(), k=1))
 
-    # E6 (financial) should have hit the deadline stub.
-    fin = result["financial"]
-    assert fin["status"] == "error"
-    assert fin["error"]["type"] == "DeadlineExceeded"
+    # E4.2 (cure) should have hit the deadline stub.
+    cure = result["pest_disease_cure"]
+    assert cure["status"] == "error"
+    assert cure["error"]["type"] == "DeadlineExceeded"
 
 
 def test_engine_error_is_isolated_to_its_own_slot(monkeypatch):
@@ -105,8 +105,7 @@ def test_engine_error_is_isolated_to_its_own_slot(monkeypatch):
 
     assert result["fertilizer"]["status"] == "error"
     # Sibling tier-2 engines should still be ok.
-    assert result["irrigation"]["status"] == "ok"
-    assert result["crop_protection"]["status"] == "ok"
+    assert result["pest_disease_risk"]["status"] == "ok"
     assert result["yield"]["status"] == "ok"
-    # Downstream tier-3 still runs.
-    assert result["financial"]["status"] == "ok"
+    # Downstream tier-3 (E4.2 cure) still runs.
+    assert result["pest_disease_cure"]["status"] == "ok"

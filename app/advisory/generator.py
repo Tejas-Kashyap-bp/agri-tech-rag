@@ -120,7 +120,7 @@ def generate_for_engine(
     query_text = f"{spec.focus}\n\n{context.to_prompt_block()}"
     docs = retrieve(
         crop=context.crop,
-        engine=spec.engine_id,
+        engine=spec.retrieve_engine_id or spec.engine_id,
         query_text=query_text,
         k=k,
     )

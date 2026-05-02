@@ -1,0 +1,146 @@
+{
+  "crop": "apple",
+  "doc_type": "ipm_schedule",
+  "doc_subtype": "mature_apple_ipm",
+  "source": "IPM Schedule for Mature Apple Plant (client-supplied CSV, 2026-05)",
+  "scaling_basis": {
+    "default_spray_volume_per_tree_l": 10,
+    "note": "Mature apple high-volume spray rule of thumb: ~10 L of mixed solution per tree per round. Engine derives total_spray_volume_l = tree_count * default_spray_volume_per_tree_l, then scales each chemical/organic line whose basis is 'spray_solution' by (total_spray_volume_l / rate_basis_volume_l). Lines with basis 'per_acre' are multiplied by farm_area_acres; lines with basis 'per_tree' are multiplied by tree_count."
+  },
+  "stages": [
+    {
+      "stage_label": "Dormant",
+      "month_window": "Dec–Jan",
+      "month_start_mm_dd": "12-01",
+      "month_end_mm_dd": "01-31",
+      "apple_stage_code": "S5",
+      "major_problems": ["San Jose scale", "mites", "canker"],
+      "organic": [
+        {"action": "Pruning + orchard sanitation", "basis": "as_needed"},
+        {"material": "Bordeaux paste on pruning cuts", "basis": "as_needed"}
+      ],
+      "chemical": [
+        {"material": "Horticulture mineral oil", "concentration_value": 2, "concentration_unit": "L", "rate_basis_volume_l": 100, "basis": "spray_solution"}
+      ]
+    },
+    {
+      "stage_label": "Green Tip / Bud Break",
+      "month_window": "Feb–Mar",
+      "month_start_mm_dd": "02-01",
+      "month_end_mm_dd": "03-15",
+      "apple_stage_code": "S1",
+      "major_problems": ["Apple scab", "canker"],
+      "organic": [
+        {"material": "Trichoderma paste on pruning wounds", "basis": "as_needed"}
+      ],
+      "chemical": [
+        {"material": "Copper oxychloride", "concentration_value": 300, "concentration_unit": "g", "rate_basis_volume_l": 100, "basis": "spray_solution", "targets": ["Apple scab", "canker"]},
+        {"material": "Mancozeb", "concentration_value": 250, "concentration_unit": "g", "rate_basis_volume_l": 100, "basis": "spray_solution", "targets": ["Apple scab"], "note": "alternative to copper oxychloride"}
+      ]
+    },
+    {
+      "stage_label": "Pink Bud",
+      "month_window": "Mar–Apr",
+      "month_start_mm_dd": "03-16",
+      "month_end_mm_dd": "04-10",
+      "apple_stage_code": "S1",
+      "major_problems": ["Powdery mildew", "aphid"],
+      "organic": [
+        {"material": "Neem oil", "concentration_min": 500, "concentration_max": 1000, "concentration_unit": "ml", "rate_basis_volume_l": 100, "basis": "spray_solution", "targets": ["aphid", "Powdery mildew"]}
+      ],
+      "chemical": [
+        {"material": "Wettable sulphur", "concentration_value": 250, "concentration_unit": "g", "rate_basis_volume_l": 100, "basis": "spray_solution", "targets": ["Powdery mildew"]}
+      ]
+    },
+    {
+      "stage_label": "Flowering",
+      "month_window": "Mar–Apr (full bloom)",
+      "month_start_mm_dd": "04-11",
+      "month_end_mm_dd": "05-10",
+      "apple_stage_code": "S2",
+      "major_problems": ["Bee activity", "Apple scab risk"],
+      "organic": [
+        {"action": "Avoid insecticide; maintain orchard sanitation", "basis": "guidance_only"}
+      ],
+      "chemical": [
+        {"action": "Avoid insecticide during full bloom; fungicide only if scab pressure is high", "basis": "guidance_only"}
+      ]
+    },
+    {
+      "stage_label": "Petal Fall / Fruit Set",
+      "month_window": "Apr–May",
+      "month_start_mm_dd": "05-11",
+      "month_end_mm_dd": "05-31",
+      "apple_stage_code": "S2",
+      "major_problems": ["Aphid", "Apple scab", "leaf miner"],
+      "organic": [
+        {"material": "Neem oil", "concentration_value": 1, "concentration_unit": "L", "rate_basis_volume_l": 100, "basis": "spray_solution", "targets": ["aphid", "leaf miner"]},
+        {"material": "Beauveria bassiana", "concentration_value": 500, "concentration_unit": "g", "rate_basis_volume_l": 100, "basis": "spray_solution", "targets": ["aphid"], "note": "alternative"}
+      ],
+      "chemical": [
+        {"material": "Imidacloprid 17.8 SL", "concentration_min": 25, "concentration_max": 30, "concentration_unit": "ml", "rate_basis_volume_l": 100, "basis": "spray_solution", "targets": ["aphid"]},
+        {"material": "Mancozeb", "concentration_value": 250, "concentration_unit": "g", "rate_basis_volume_l": 100, "basis": "spray_solution", "targets": ["Apple scab"]}
+      ]
+    },
+    {
+      "stage_label": "Fruit Development",
+      "month_window": "May–June",
+      "month_start_mm_dd": "06-01",
+      "month_end_mm_dd": "06-15",
+      "apple_stage_code": "S3",
+      "major_problems": ["Codling moth / fruit borer", "mites"],
+      "organic": [
+        {"material": "Pheromone traps", "concentration_min": 4, "concentration_max": 5, "concentration_unit": "traps", "basis": "per_acre", "targets": ["Codling moth", "fruit borer"]},
+        {"material": "Bt (Bacillus thuringiensis)", "concentration_min": 500, "concentration_max": 1000, "concentration_unit": "g", "basis": "per_acre", "targets": ["Codling moth", "fruit borer"]}
+      ],
+      "chemical": [
+        {"material": "Spinosad 45 SC", "concentration_value": 15, "concentration_unit": "ml", "rate_basis_volume_l": 100, "basis": "spray_solution", "targets": ["Codling moth", "fruit borer"]},
+        {"material": "Emamectin benzoate", "concentration_value": 40, "concentration_unit": "g", "basis": "per_acre", "targets": ["Codling moth", "fruit borer"], "note": "alternative"}
+      ]
+    },
+    {
+      "stage_label": "Fruit Enlargement",
+      "month_window": "June–July",
+      "month_start_mm_dd": "06-16",
+      "month_end_mm_dd": "07-15",
+      "apple_stage_code": "S3",
+      "major_problems": ["Mites", "woolly aphid", "leaf spot"],
+      "organic": [
+        {"material": "Neem oil", "concentration_value": 1, "concentration_unit": "L", "rate_basis_volume_l": 100, "basis": "spray_solution", "targets": ["mites", "woolly aphid"]},
+        {"action": "Remove infested shoots", "basis": "as_needed"}
+      ],
+      "chemical": [
+        {"material": "Propargite 57 EC", "concentration_value": 100, "concentration_unit": "ml", "rate_basis_volume_l": 100, "basis": "spray_solution", "targets": ["mites"]},
+        {"material": "Difenoconazole", "concentration_value": 30, "concentration_unit": "ml", "rate_basis_volume_l": 100, "basis": "spray_solution", "targets": ["leaf spot"]}
+      ]
+    },
+    {
+      "stage_label": "Pre-Harvest",
+      "month_window": "July–Aug",
+      "month_start_mm_dd": "07-16",
+      "month_end_mm_dd": "08-15",
+      "apple_stage_code": "S3",
+      "major_problems": ["Fruit rot", "Sooty Blotch", "mites"],
+      "organic": [
+        {"action": "Remove fallen fruits, maintain orchard sanitation", "basis": "guidance_only"}
+      ],
+      "chemical": [
+        {"action": "Use only safe chemicals with proper pre-harvest interval (PHI). Avoid late-season residues.", "basis": "guidance_only"}
+      ]
+    },
+    {
+      "stage_label": "Post-Harvest",
+      "month_window": "Sept–Oct",
+      "month_start_mm_dd": "09-15",
+      "month_end_mm_dd": "10-31",
+      "apple_stage_code": "S4",
+      "major_problems": ["Canker", "collar rot", "pest carry-over"],
+      "organic": [
+        {"material": "Trichoderma", "concentration_value": 50, "concentration_unit": "g", "basis": "per_tree", "note": "mixed with compost"}
+      ],
+      "chemical": [
+        {"material": "Copper oxychloride", "concentration_value": 300, "concentration_unit": "g", "rate_basis_volume_l": 100, "basis": "spray_solution", "targets": ["canker"], "condition": "if disease pressure is high"}
+      ]
+    }
+  ]
+}

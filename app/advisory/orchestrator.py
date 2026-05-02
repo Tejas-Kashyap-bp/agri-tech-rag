@@ -1,29 +1,30 @@
 """
 Multi-engine advisory orchestrator.
 
-Runs E1–E6 for one farm context and assembles the structured response shape:
+Runs E1, E3, E4.1, E4.2, E5 for one farm context and assembles the
+structured response shape (E2 irrigation and E6 financial are intentionally
+omitted for the apple build):
 
     {
-      "request_id":      "<uuid>",
-      "context":         {...echo of inputs...},
-      "stage":           {...},   # E1
-      "irrigation":      {...},   # E2
-      "fertilizer":      {...},   # E3
-      "crop_protection": {...},   # E4
-      "yield":           {...},   # E5
-      "financial":       {...}    # E6
+      "request_id":          "<uuid>",
+      "context":             {...echo of inputs...},
+      "stage":               {...},   # E1
+      "fertilizer":          {...},   # E3
+      "pest_disease_risk":   {...},   # E4.1
+      "yield":               {...},   # E5
+      "pest_disease_cure":   {...}    # E4.2
     }
 
 Execution tiers (driven by inter-engine data dependencies):
 
     Tier 1:  E1 (stage)                            → sequential
-    Tier 2:  E2 + E3 + E4 + E5                     → parallel (asyncio.gather)
+    Tier 2:  E3 + E4 + E5                          → parallel (asyncio.gather)
              each receives E1's output as upstream
     Tier 3:  E6 (financial)                        → sequential
              receives E5's output as upstream
 
 WHY this shape (not all-parallel, not all-sequential):
-  - E2-E5 all need to know the current growth stage to pick the right
+  - E3-E5 all need to know the current growth stage to pick the right
     schedule entry / threshold, so E1 must finish first.
   - E6 (financial) needs the yield outlook from E5 to project harvest value,
     so it must wait for E5.
@@ -56,11 +57,25 @@ import asyncio
 import logging
 import time
 import uuid
-from typing import Any
+from typing import Any, Optional
 
 from app.advisory.context import AdvisoryContext
 from app.advisory.engines import ENGINES, EngineSpec
 from app.advisory.generator import generate_for_engine
+from app.advisory.satellite_layer import (
+    build_satellite_advisory,
+    build_satellite_summary,
+    classify as classify_satellite,
+)
+from app.advisory.yield_layer import (
+    build_satellite_advisory as build_yield_satellite_advisory,
+    build_yield_summary,
+    build_total_yield_summary,
+    classify_yield_satellite,
+    compute_adjustment_percent,
+    compute_base_yield,
+    compute_final_yield,
+)
 
 log = logging.getLogger("advisory.orchestrator")
 
@@ -68,19 +83,18 @@ log = logging.getLogger("advisory.orchestrator")
 # to TWO LLM calls per engine (initial + schema retry), each with this
 # timeout — so the engine's worst-case wall clock is 2 × this value. With
 # 22.5s, worst case = 45s, which matches the per-tier budget assumed below.
-PER_ENGINE_TIMEOUT_S: float = 22.5
-REQUEST_DEADLINE_S: float = 180.0
+PER_ENGINE_TIMEOUT_S: float = 90.0
+REQUEST_DEADLINE_S: float = 360.0
 
 # Single source of truth for inter-engine dependencies. Both
 # generate_advisories (tier-parallel path) and generate_single (per-engine
 # endpoint path) read from this map so adding a new engine is one edit.
 _DEPENDENCIES: dict[str, tuple[str, ...]] = {
     "e1_stage": (),
-    "e2_irrigation": ("e1_stage",),
     "e3_nutrition": ("e1_stage",),
-    "e4_crop_health": ("e1_stage",),
+    "e4_pest_disease_risk": ("e1_stage",),
+    "e4_2_pest_disease_cure": ("e1_stage", "e4_pest_disease_risk"),
     "e5_yield": ("e1_stage",),
-    "e6_financial": ("e1_stage", "e5_yield"),
 }
 
 
@@ -105,6 +119,19 @@ async def _run_engine(
     A failure here does NOT propagate — we trap the exception and return an
     error stub so the parent gather doesn't tear down sibling engines.
     """
+    # Demo Satellite Data Layer — only enriches Engine 3 (fertilizer / INM).
+    # Failure here must NOT break the engine: if the demo provider raises
+    # we fall through with the original context and the engine continues
+    # with whatever satellite data the caller already supplied (if any).
+    if spec.engine_id == "e3_nutrition":
+        context = _enrich_context_with_demo_satellite(context)
+    # E5 also benefits from the demo satellite snapshot (it runs an
+    # independent yield-correction layer). Enrichment is additive — caller-
+    # supplied satellite values always win.
+    if spec.engine_id == "e5_yield":
+        context = _enrich_context_with_demo_satellite(context)
+
+    inputs_used = _build_inputs_used(context, spec, upstream_outputs)
     try:
         result = await asyncio.to_thread(
             generate_for_engine,
@@ -114,13 +141,88 @@ async def _run_engine(
             timeout,
             upstream_outputs,
         )
-        return {**result, "status": "ok"}
+        if spec.engine_id == "e3_nutrition":
+            _decorate_with_satellite_advisory(result, context)
+        if spec.engine_id == "e5_yield":
+            _decorate_with_yield_calculation(result, context)
+        return {**result, "inputs_used": inputs_used, "status": "ok"}
     except Exception as exc:
         log.exception(
             "engine_error request_id=%s engine=%s",
             request_id, spec.engine_id,
         )
-        return _error_stub(spec, exc)
+        return {**_error_stub(spec, exc), "inputs_used": inputs_used}
+
+
+# ---------------------------------------------------------------------------
+# inputs_used — deterministic snapshot of what the engine "saw"
+# ---------------------------------------------------------------------------
+# Built in code (not by the LLM) so the UI can show a "why this advisory"
+# drawer that lists the actual driving inputs (current_date, DAS, weather
+# bands, soil, satellite, upstream summaries). Computed BEFORE the LLM call
+# so it is attached even when the engine errors — the UI can still explain
+# what the system tried to reason over.
+# ---------------------------------------------------------------------------
+
+
+_RELEVANT_EXTRA_KEYS_BY_ENGINE: dict[str, tuple[str, ...]] = {
+    "e1_stage": (),
+    "e3_nutrition": ("farm_area_acres",),
+    "e4_pest_disease_risk": ("organism_focus", "tweak_mode"),
+    "e4_2_pest_disease_cure": ("tree_count", "farm_area_acres"),
+    "e5_yield": ("farm_area_acres", "expected_harvest_date"),
+}
+
+
+def _summarise_satellite(sat: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Reduce satellite timeseries to a 'latest reading' for each band so the
+    UI drawer stays compact. The full series is still in the request echo."""
+    if not sat:
+        return None
+    out: dict[str, Any] = {}
+    for key in ("ndvi_timeseries", "evi_timeseries", "ndwi_timeseries"):
+        series = sat.get(key) or []
+        if series:
+            last = series[-1]
+            band = key.replace("_timeseries", "")
+            out[band] = {"date": last.get("date"), "value": last.get("value")}
+    return out or None
+
+
+def _build_inputs_used(
+    context: AdvisoryContext,
+    spec: EngineSpec,
+    upstream_outputs: dict[str, dict[str, Any]] | None,
+) -> dict[str, Any]:
+    inputs: dict[str, Any] = {
+        "crop": context.crop,
+        "current_date": context.current_date.isoformat(),
+        "sowing_date": context.sowing_date.isoformat(),
+        "days_after_sowing": context.das,
+    }
+    if context.weather:
+        inputs["weather"] = context.weather
+    if context.soil:
+        inputs["soil"] = context.soil
+    sat_summary = _summarise_satellite(context.satellite)
+    if sat_summary:
+        inputs["satellite_latest"] = sat_summary
+    if context.detection:
+        inputs["detection"] = context.detection
+
+    relevant_keys = _RELEVANT_EXTRA_KEYS_BY_ENGINE.get(spec.engine_id, ())
+    if context.extra and relevant_keys:
+        picked = {k: context.extra[k] for k in relevant_keys if k in context.extra}
+        if picked:
+            inputs["farm"] = picked
+
+    if upstream_outputs:
+        inputs["upstream_summaries"] = {
+            up_id: (up.get("summary") or "")[:280]
+            for up_id, up in sorted(upstream_outputs.items())
+        }
+
+    return inputs
 
 
 async def generate_advisories(context: AdvisoryContext, k: int = 1) -> dict[str, Any]:
@@ -152,7 +254,7 @@ async def generate_advisories(context: AdvisoryContext, k: int = 1) -> dict[str,
     upstream_for_tier2 = {"e1_stage": e1_output}
 
     # ---- Tier 2: E2, E3, E4, E5 in parallel -------------------------------
-    tier2_ids = ["e2_irrigation", "e3_nutrition", "e4_crop_health", "e5_yield"]
+    tier2_ids = ["e3_nutrition", "e4_pest_disease_risk", "e5_yield"]
     tier2_specs = [_spec_by_id(eid) for eid in tier2_ids]
 
     tier2_remaining = REQUEST_DEADLINE_S - (time.monotonic() - started)
@@ -177,20 +279,37 @@ async def generate_advisories(context: AdvisoryContext, k: int = 1) -> dict[str,
         for s, r in zip(tier2_specs, tier2_results):
             advisories[s.output_key] = r
 
-    # ---- Tier 3: E6 (financial) — needs E5's yield output -----------------
-    e6_spec = _spec_by_id("e6_financial")
-    e6_remaining = REQUEST_DEADLINE_S - (time.monotonic() - started)
-    if e6_remaining <= 0:
-        advisories[e6_spec.output_key] = _deadline_stub(e6_spec)
+    # ---- Tier 3: E4.2 (IPM cure) — needs tier-2 ---------------------------
+    # E4.2 reads E4.1's triggered_organisms. E6 (financial) was removed from
+    # the apple build, so this tier now contains a single engine.
+    e42_spec = _spec_by_id("e4_2_pest_disease_cure")
+    tier3_specs = [e42_spec]
+    upstream_for_tier3 = {
+        "e1_stage": e1_output,
+        "e4_pest_disease_risk": advisories["pest_disease_risk"],
+        "e5_yield": advisories["yield"],
+    }
+    tier3_remaining = REQUEST_DEADLINE_S - (time.monotonic() - started)
+    if tier3_remaining <= 0:
+        for s in tier3_specs:
+            advisories[s.output_key] = _deadline_stub(s)
     else:
-        upstream_for_e6 = {"e5_yield": advisories["yield"]}
-        advisories[e6_spec.output_key] = await _run_engine(
-            context, e6_spec,
-            k=k,
-            timeout=min(PER_ENGINE_TIMEOUT_S, e6_remaining),
-            upstream_outputs=upstream_for_e6,
-            request_id=request_id,
+        per_engine = min(PER_ENGINE_TIMEOUT_S, tier3_remaining)
+        tier3_results = await asyncio.gather(
+            *[
+                _run_engine(
+                    context, s,
+                    k=k,
+                    timeout=per_engine,
+                    upstream_outputs=upstream_for_tier3,
+                    request_id=request_id,
+                )
+                for s in tier3_specs
+            ],
+            return_exceptions=False,
         )
+        for s, r in zip(tier3_specs, tier3_results):
+            advisories[s.output_key] = r
 
     total_ms = int((time.monotonic() - started) * 1000)
     log.info(
@@ -289,6 +408,210 @@ def _error_stub(spec: EngineSpec, exc: Exception) -> dict[str, Any]:
             "message": str(exc)[:500],
         },
     }
+
+
+def _enrich_context_with_demo_satellite(context: AdvisoryContext) -> AdvisoryContext:
+    """For E3 only: ensure context.satellite carries ndvi_current /
+    ndvi_delta_7d / ndre_current. If the caller already supplied any of these
+    we keep their value (real data wins over demo). Wrapped in try/except so
+    a provider failure cannot break the existing fertilizer flow."""
+    try:
+        from app.data_fetchers.satellite_demo import get_satellite_data
+
+        farm_id = None
+        if context.extra:
+            farm_id = context.extra.get("farm_id") or context.extra.get("field_id")
+        demo = get_satellite_data(farm_id)
+        merged: dict[str, Any] = dict(context.satellite or {})
+        for key, value in demo.items():
+            merged.setdefault(key, value)
+        return context.model_copy(update={"satellite": merged})
+    except Exception:
+        log.warning("satellite_demo_fetch_failed engine=e3_nutrition", exc_info=True)
+        return context
+
+
+def _decorate_with_satellite_advisory(
+    result: dict[str, Any], context: AdvisoryContext
+) -> None:
+    """Add satellite-derived fields to an E3 result in-place. Additive only:
+    never touches existing keys. Silent no-op on any failure."""
+    try:
+        if result.get("parse_status") == "error":
+            return
+        sat = context.satellite or {}
+        features = classify_satellite(sat)
+        if not features:
+            return
+        details = result.get("details")
+        if not isinstance(details, dict):
+            details = {}
+            result["details"] = details
+        # NOTE: index buckets and raw NDVI / NDRE numbers are intentionally
+        # NOT exposed here anymore — the farmer-facing UI must not mention
+        # any technical index. Keep the structured fields only under a
+        # private `_satellite_debug` slot so internal tooling can still see
+        # them for debugging.
+        details.setdefault(
+            "_satellite_debug",
+            {
+                "ndvi_health": features["ndvi_health"],
+                "ndvi_trend": features["ndvi_trend"],
+                "ndre_status": features["ndre_status"],
+                "ndvi_current": sat.get("ndvi_current"),
+                "ndvi_delta_7d": sat.get("ndvi_delta_7d"),
+                "ndre_current": sat.get("ndre_current"),
+                "source": sat.get("source", "unknown"),
+            },
+        )
+        # Integrate the satellite-driven recommendation into the main
+        # fertilizer summary so the UI does not need a separate
+        # "🛰 satellite advisory" block. Field team feedback: farmers should
+        # see one combined fertilizer message, not two.
+        sat_text = build_satellite_advisory(features)
+        existing_summary = (result.get("summary") or "").strip()
+        if sat_text and sat_text not in existing_summary:
+            result["summary"] = (
+                f"{existing_summary} {sat_text}".strip()
+                if existing_summary else sat_text
+            )
+        # Kept for backward-compatible API consumers but no longer rendered
+        # by the farmer UI.
+        result.setdefault("satellite_advisory", sat_text)
+        result.setdefault("satellite_summary", build_satellite_summary(features))
+    except Exception:
+        log.warning("satellite_decorate_failed engine=e3_nutrition", exc_info=True)
+
+
+# ---------------------------------------------------------------------------
+# E5 yield calculation decoration
+# ---------------------------------------------------------------------------
+# Additive layer that runs AFTER the LLM. It computes a deterministic base
+# yield from tree geometry and applies a satellite-driven correction. Lives
+# next to the E3 decorator so both follow the same "never overwrite, never
+# raise" contract.
+# ---------------------------------------------------------------------------
+
+# Reasonable apple-orchard defaults used when context.extra does not carry
+# the geometry inputs. Picked to keep the engine runnable in demos; real
+# deployments should pass explicit per-farm values via context.extra.
+_E5_DEFAULTS: dict[str, float] = {
+    "radius_of_tree": 0.10,            # m (trunk radius)
+    "crop_density": 2000.0,            # fruits per unit TCSA
+    "average_fruit_weight_g": 150.0,   # g per fruit
+}
+
+
+def _pick_float(extra: dict[str, Any] | None, *keys: str) -> Optional[float]:
+    if not extra:
+        return None
+    for k in keys:
+        if k in extra and extra[k] is not None:
+            try:
+                return float(extra[k])
+            except (TypeError, ValueError):
+                continue
+    return None
+
+
+def _decorate_with_yield_calculation(
+    result: dict[str, Any], context: AdvisoryContext
+) -> None:
+    """Add base/adjusted/final yield + summary + satellite_advisory to an E5
+    result in-place. Additive only: never overwrites existing keys. Silent
+    no-op on any failure so the LLM portion of the response is preserved."""
+    try:
+        if result.get("parse_status") == "error":
+            return
+
+        extra = context.extra or {}
+        radius = _pick_float(extra, "radius_of_tree", "tree_radius_m") \
+            or _E5_DEFAULTS["radius_of_tree"]
+        density = _pick_float(extra, "crop_density", "fruit_density") \
+            or _E5_DEFAULTS["crop_density"]
+        fruit_w = _pick_float(
+            extra, "average_fruit_weight_g", "average_fruit_weight_in_grams",
+            "fruit_weight_g",
+        ) or _E5_DEFAULTS["average_fruit_weight_g"]
+
+        # Per-tree base yield. The geometry-only formula in yield_layer
+        # actually produces a kg-per-tree figure (TCSA × density × fruit
+        # weight); the historical "kg_per_acre" naming was a misnomer the
+        # field team flagged. We keep the old keys populated for backward
+        # compatibility but now also expose the correctly named per-tree
+        # and total-orchard fields used by the UI.
+        base_per_tree = round(compute_base_yield(radius, density, fruit_w), 2)
+
+        sat = context.satellite or {}
+        features = classify_yield_satellite(sat)
+        if features is not None:
+            adjustment_percent = compute_adjustment_percent(features)
+            advisory_text = build_yield_satellite_advisory(
+                features, adjustment_percent
+            )
+        else:
+            adjustment_percent = 0
+            advisory_text = (
+                "Recent field condition data is not available for this "
+                "orchard. The yield estimate uses the standard calculation "
+                "without any field-condition correction."
+            )
+
+        final_per_tree = compute_final_yield(base_per_tree, adjustment_percent)
+
+        # Tree count is supplied by the API caller (see farm_advisory.py
+        # _DEMO_TREE_COUNTS). Fall back to a conservative default if
+        # missing so the engine still returns a sensible total.
+        num_trees = (
+            _pick_float(extra, "tree_count", "number_of_trees", "num_trees")
+            or 109.0
+        )
+        num_trees = int(round(num_trees))
+        total_yield = round(final_per_tree * num_trees, 2)
+
+        per_tree_line = build_yield_summary(
+            base_per_tree, adjustment_percent, final_per_tree
+        )
+        total_line = build_total_yield_summary(
+            final_per_tree, num_trees, total_yield
+        )
+        summary = f"{per_tree_line} {total_line}"
+
+        # New farmer-facing fields.
+        result.setdefault("base_yield_kg_per_tree", base_per_tree)
+        result.setdefault("final_yield_kg_per_tree", final_per_tree)
+        result.setdefault("number_of_trees", num_trees)
+        result.setdefault("total_yield_kg", total_yield)
+
+        # Backward-compat fields (same numbers, old per_acre names).
+        result.setdefault("base_yield_kg_per_acre", base_per_tree)
+        result.setdefault("adjustment_percent", adjustment_percent)
+        result.setdefault("final_yield_kg_per_acre", final_per_tree)
+        result.setdefault("yield_summary", summary)
+        result.setdefault("satellite_advisory", advisory_text)
+        # Raw indices kept under a private debug key; never rendered to
+        # farmers by the UI.
+        result.setdefault(
+            "_satellite_debug",
+            {
+                "ndvi": sat.get("ndvi_current"),
+                "ndre": sat.get("ndre_current"),
+                "evi": sat.get("evi_current"),
+            },
+        )
+        # E5 is now a deterministic geometry+satellite computation, not an
+        # LLM-driven engine, so the "No active knowledge found…" short-circuit
+        # message is no longer the right top-line summary for this card.
+        # Overwrite `summary` with the yield calculation string whenever the
+        # decorator successfully produced one. We intentionally do this
+        # AFTER the setdefaults above so the structured fields are still
+        # populated; only the human-facing summary line is replaced.
+        existing_summary = result.get("summary") or ""
+        is_no_knowledge_stub = "No active knowledge" in existing_summary
+        if is_no_knowledge_stub or not existing_summary:
+            result["summary"] = summary
+    except Exception:
+        log.warning("yield_decorate_failed engine=e5_yield", exc_info=True)
 
 
 def _deadline_stub(spec: EngineSpec) -> dict[str, Any]:

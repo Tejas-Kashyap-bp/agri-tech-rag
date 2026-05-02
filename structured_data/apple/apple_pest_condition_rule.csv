@@ -1,0 +1,41 @@
+pest_name,stage_code,stage_name,calendar_window,temp_c_min,temp_c_max,humidity_pct_min,humidity_pct_max,conducive_duration_hrs_min,conducive_duration_hrs_max,base_risk_pct
+San Jose Scale,S1,Vegetative,March-10 April,10,20,50,80,6,8,50
+San Jose Scale,S2,Flowering,11 April- 10 May,15,25,50,85,6,10,65
+San Jose Scale,S3,Fruiting Stage,11 May- 15 Aug,20,30,55,85,8,12,80
+San Jose Scale,S4,Harvesting Stage,16 Aug-Nov,15,28,50,80,6,10,70
+Woolly Apple Aphid,S1,Vegetative,March-10 April,10,20,50,80,6,8,45
+Woolly Apple Aphid,S2,Flowering,11 April- 10 May,15,25,55,85,6,10,65
+Woolly Apple Aphid,S3,Fruiting Stage,11 May- 15 Aug,18,28,60,90,8,12,80
+Woolly Apple Aphid,S4,Harvesting Stage,16 Aug-Nov,12,25,55,85,6,10,60
+European Red Mite,S1,Vegetative,March-10 April,10,20,40,75,6,8,40
+Woolly Apple Aphid,S2,Flowering,11 April- 10 May,15,25,40,75,6,10,55
+Woolly Apple Aphid,S3,Fruiting Stage,11 May- 15 Aug,20,32,35,70,8,12,80
+Woolly Apple Aphid,S4,Harvesting Stage,16 Aug-Nov,15,28,40,75,6,10,60
+Codling Moth,S1,Vegetative,March-10 April,8,18,45,75,4,6,25
+Codling Moth,S2,Flowering,11 April- 10 May,12,24,45,80,6,8,50
+Codling Moth,S3,Fruiting Stage,11 May- 15 Aug,18,30,50,80,8,12,80
+Codling Moth,S4,Harvesting Stage,16 Aug-Nov,15,28,45,75,6,10,65
+Apple Leaf Miner,S1,Vegetative,March-10 April,10,20,50,80,6,8,40
+Apple Leaf Miner,S2,Flowering,11 April- 10 May,15,25,50,85,6,10,60
+Apple Leaf Miner,S3,Fruiting Stage,11 May- 15 Aug,20,30,55,85,8,12,75
+Apple Leaf Miner,S4,Harvesting Stage,16 Aug-Nov,15,28,50,85,6,10,55
+Apple Stem Borer,S1,Vegetative,March-10 April,10,20,45,75,6,8,30
+Apple Stem Borer,S2,Flowering,11 April- 10 May,15,25,45,80,6,10,45
+Apple Stem Borer,S3,Fruiting Stage,11 May- 15 Aug,20,32,45,85,8,12,70
+Apple Stem Borer,S4,Harvesting Stage,16 Aug-Nov,15,28,45,80,6,10,60
+Aphids / Green Apple Aphid,S1,Vegetative,March-10 April,10,20,55,85,6,8,55
+Aphids / Green Apple Aphid,S2,Flowering,11 April- 10 May,15,25,55,90,6,10,75
+Aphids / Green Apple Aphid,S3,Fruiting Stage,11 May- 15 Aug,18,28,50,85,8,12,70
+Aphids / Green Apple Aphid,S4,Harvesting Stage,16 Aug-Nov,10,24,50,80,6,8,40
+Tent Caterpillar / Defoliating Caterpillar,S1,Vegetative,March-10 April,10,20,50,80,6,8,50
+Tent Caterpillar / Defoliating Caterpillar,S2,Flowering,11 April- 10 May,15,25,50,85,6,10,70
+Tent Caterpillar / Defoliating Caterpillar,S3,Fruiting Stage,11 May- 15 Aug,20,30,55,85,8,12,75
+Tent Caterpillar / Defoliating Caterpillar,S4,Harvesting Stage,16 Aug-Nov,15,28,50,80,6,10,50
+Thrips,S1,Vegetative,March-10 April,12,22,40,70,6,8,45
+Thrips,S2,Flowering,11 April- 10 May,15,28,40,75,6,10,75
+Thrips,S3,Fruiting Stage,11 May- 15 Aug,20,32,35,70,8,12,70
+Thrips,S4,Harvesting Stage,16 Aug-Nov,15,28,40,75,6,8,40
+Fruit Fly,S1,Vegetative,March-10 April,10,20,50,75,4,6,15
+Fruit Fly,S2,Flowering,11 April- 10 May,15,24,55,80,4,6,20
+Fruit Fly,S3,Fruiting Stage,11 May- 15 Aug,20,30,60,90,6,10,50
+Fruit Fly,S4,Harvesting Stage,16 Aug-Nov,18,28,60,90,8,12,75
