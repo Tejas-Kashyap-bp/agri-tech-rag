@@ -155,6 +155,11 @@ async def farm_advisory(req: FarmAdvisoryRequest):
         "irrigation_method": farm.get("irrigation_method"),
         "pump_flow_rate_lph": farm.get("pump_flow_rate_lph"),
         "farm_area_acres": farm.get("farm_area_acres"),
+        # Geometry needed by the live Sentinel Hub adapter (E3 + E5).
+        # farm_polygon comes straight from Supabase when populated; lat/lon
+        # + farm_area_m2 let the adapter synthesize a bbox when polygon is NULL.
+        "farm_polygon": farm.get("farm_polygon"),
+        "farm_area_m2": farm.get("farm_area_m2"),
         "outstanding_loan_amount": farm.get("outstanding_loan_amount"),
         "market_price_per_kg": farm.get("market_price_per_kg"),
         "input_cost_invested": farm.get("input_cost_invested"),

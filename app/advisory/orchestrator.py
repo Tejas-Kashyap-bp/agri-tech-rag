@@ -119,17 +119,14 @@ async def _run_engine(
     A failure here does NOT propagate — we trap the exception and return an
     error stub so the parent gather doesn't tear down sibling engines.
     """
-    # Demo Satellite Data Layer — only enriches Engine 3 (fertilizer / INM).
-    # Failure here must NOT break the engine: if the demo provider raises
-    # we fall through with the original context and the engine continues
-    # with whatever satellite data the caller already supplied (if any).
-    if spec.engine_id == "e3_nutrition":
-        context = _enrich_context_with_demo_satellite(context)
-    # E5 also benefits from the demo satellite snapshot (it runs an
-    # independent yield-correction layer). Enrichment is additive — caller-
-    # supplied satellite values always win.
-    if spec.engine_id == "e5_yield":
-        context = _enrich_context_with_demo_satellite(context)
+    # Live Sentinel Hub satellite layer — enriches E3 (fertilizer / INM)
+    # and E5 (yield correction). Caller-supplied satellite values always
+    # win; this is purely additive. A live-fetch failure must NOT break
+    # the engine: we trap the exception in the helper and fall through
+    # with the original context so the engine still runs (just without
+    # the satellite-driven nudges).
+    if spec.engine_id in ("e3_nutrition", "e5_yield"):
+        context = _enrich_context_with_live_satellite(context)
 
     inputs_used = _build_inputs_used(context, spec, upstream_outputs)
     try:
@@ -410,24 +407,31 @@ def _error_stub(spec: EngineSpec, exc: Exception) -> dict[str, Any]:
     }
 
 
-def _enrich_context_with_demo_satellite(context: AdvisoryContext) -> AdvisoryContext:
-    """For E3 only: ensure context.satellite carries ndvi_current /
-    ndvi_delta_7d / ndre_current. If the caller already supplied any of these
-    we keep their value (real data wins over demo). Wrapped in try/except so
-    a provider failure cannot break the existing fertilizer flow."""
+def _enrich_context_with_live_satellite(context: AdvisoryContext) -> AdvisoryContext:
+    """Enrich context.satellite with a live Sentinel Hub reading
+    (ndvi_current, ndvi_delta_7d, ndre_current, evi_current). Caller-supplied
+    keys win — `setdefault` only fills gaps. Wrapped in try/except so a
+    Sentinel Hub or geometry failure cannot break the engine path; on failure
+    the engine continues with whatever satellite data the caller passed (or
+    none, in which case the engine simply skips satellite-derived nudges)."""
     try:
-        from app.data_fetchers.satellite_demo import get_satellite_data
+        from app.data_fetchers.satellite_live import get_satellite_data
 
-        farm_id = None
-        if context.extra:
-            farm_id = context.extra.get("farm_id") or context.extra.get("field_id")
-        demo = get_satellite_data(farm_id)
+        extra = context.extra or {}
+        live = get_satellite_data(
+            sowing_date=context.sowing_date,
+            farm_polygon=extra.get("farm_polygon"),
+            latitude=(extra.get("location") or {}).get("latitude"),
+            longitude=(extra.get("location") or {}).get("longitude"),
+            farm_area_m2=extra.get("farm_area_m2"),
+            farm_area_acres=extra.get("farm_area_acres"),
+        )
         merged: dict[str, Any] = dict(context.satellite or {})
-        for key, value in demo.items():
+        for key, value in live.items():
             merged.setdefault(key, value)
         return context.model_copy(update={"satellite": merged})
     except Exception:
-        log.warning("satellite_demo_fetch_failed engine=e3_nutrition", exc_info=True)
+        log.warning("satellite_live_fetch_failed", exc_info=True)
         return context
 
 

@@ -38,6 +38,18 @@ if _INTEGRATED_ENV.exists():
     # override=False: agri-rag/.env still wins on the keys it defines.
     load_dotenv(_INTEGRATED_ENV, override=False)
 
+# Also load this repo's own .env into os.environ so credentials consumed by
+# sibling-repo fetchers (e.g. data_fetchers/satellite.py reads
+# os.environ["SENTINEL_CLIENT_ID"]) are visible at runtime. Pydantic-settings
+# already reads .env for declared fields, but it does NOT export them to
+# os.environ, so undeclared keys (Sentinel Hub creds, etc.) would otherwise
+# be invisible to the fetchers.
+_LOCAL_ENV = Path(__file__).resolve().parent.parent / ".env"
+if _LOCAL_ENV.exists():
+    # override=True: local .env is the source of truth for this repo's keys
+    # (and shadows any same-named keys that came from the sibling .env).
+    load_dotenv(_LOCAL_ENV, override=True)
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
