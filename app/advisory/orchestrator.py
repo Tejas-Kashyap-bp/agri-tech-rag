@@ -143,6 +143,7 @@ async def _run_engine(
         )
         if spec.engine_id == "e3_nutrition":
             _decorate_with_satellite_advisory(result, context)
+            _decorate_with_nutrition_guardrails(result, context)
         if spec.engine_id == "e5_yield":
             _decorate_with_yield_calculation(result, context)
         return {**result, "inputs_used": inputs_used, "status": "ok"}
@@ -311,6 +312,14 @@ async def generate_advisories(context: AdvisoryContext, k: int = 1) -> dict[str,
         for s, r in zip(tier3_specs, tier3_results):
             advisories[s.output_key] = r
 
+    # ---- Guardrail decoration: add deterministic guardrails to E4.1 + E4.2 ----
+    _decorate_with_guardrails(
+        e41_result=advisories.get("pest_disease_risk", {}),
+        e42_result=advisories.get("pest_disease_cure", {}),
+        context=context,
+        e1_output=e1_output,
+    )
+
     total_ms = int((time.monotonic() - started) * 1000)
     log.info(
         "advisory_done request_id=%s total_ms=%d engines=%d",
@@ -394,6 +403,44 @@ async def generate_single(
         spec.output_key: result,
         "upstream": upstream,
     }
+
+
+def _decorate_with_nutrition_guardrails(
+    e3_result: dict[str, Any],
+    context: AdvisoryContext,
+) -> None:
+    """Add nutrition guardrails to E3 fertilizer result in-place. Never raises."""
+    try:
+        from app.advisory.nutrition_guardrails import decorate_with_nutrition_guardrails
+        decorate_with_nutrition_guardrails(
+            e3_result=e3_result,
+            weather=context.weather,
+            context_extra=context.extra,
+        )
+    except Exception:
+        log.warning("nutrition_guardrail_decorate_failed", exc_info=True)
+
+
+def _decorate_with_guardrails(
+    e41_result: dict[str, Any],
+    e42_result: dict[str, Any],
+    context: AdvisoryContext,
+    e1_output: dict[str, Any] | None,
+) -> None:
+    """Add all 7 guardrails to E4.1 and E4.2 in-place. Never raises."""
+    try:
+        from app.advisory.guardrails import decorate_with_guardrails
+        e1_summary = (e1_output or {}).get("summary") or None
+        decorate_with_guardrails(
+            e41_result=e41_result,
+            e42_result=e42_result,
+            weather=context.weather,
+            context_extra=context.extra,
+            current_date=context.current_date,
+            e1_summary=e1_summary,
+        )
+    except Exception:
+        log.warning("guardrail_decorate_failed", exc_info=True)
 
 
 def _error_stub(spec: EngineSpec, exc: Exception) -> dict[str, Any]:
