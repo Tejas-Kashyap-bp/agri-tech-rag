@@ -60,17 +60,31 @@ class GeminiProvider(LLMProvider):
             time.sleep(0.5 + random.random() * 0.5)
             return model.generate_content(prompt, request_options=request_options)
 
+    @staticmethod
+    def _safe_text(response) -> str:
+        # response.text raises when finish_reason != STOP (SAFETY, MAX_TOKENS,
+        # RECITATION). Surface the finish_reason so the caller's retry isn't
+        # firing blind on a silent block.
+        try:
+            return response.text or ""
+        except Exception:
+            try:
+                fr = response.candidates[0].finish_reason
+            except Exception:
+                fr = "unknown"
+            raise RuntimeError(f"gemini_no_text finish_reason={fr}")
+
     def complete(self, prompt: str, system: str = "", timeout: float | None = None) -> str:
         model = self._get_model(system, json_mode=False)
         request_options = {"timeout": timeout} if timeout is not None else None
         response = self._generate_with_retry(model, prompt, request_options)
-        return response.text or ""
+        return self._safe_text(response)
 
     def complete_json(self, prompt: str, system: str = "", timeout: float | None = None) -> str:
         model = self._get_model(system, json_mode=True)
         request_options = {"timeout": timeout} if timeout is not None else None
         response = self._generate_with_retry(model, prompt, request_options)
-        return response.text or ""
+        return self._safe_text(response)
 
 
 # Lazy singleton. Constructing GeminiProvider configures the SDK with the

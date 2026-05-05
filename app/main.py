@@ -29,7 +29,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api.routes import advisory, browse, confirm, coverage, farm_advisory, ui_advisory, upload
+from app.api.routes import advisory, browse, confirm, coverage, demo, farm_advisory, ui_advisory, upload
 
 # Surface advisory.* loggers at INFO so request_id + per-engine timing show up
 # in stdout. uvicorn's default config only configures its own loggers; ours
@@ -63,6 +63,7 @@ app.include_router(coverage.router)
 app.include_router(advisory.router)
 app.include_router(farm_advisory.router)
 app.include_router(ui_advisory.router)
+app.include_router(demo.router)
 
 
 @app.get("/health", tags=["meta"])
@@ -90,3 +91,26 @@ if _FRONTEND_DIR.exists():
         # Agri-integrated-style apple farm advisory tester (production
         # /farm-advisory path — needs an apple farm in Supabase).
         return FileResponse(_FRONTEND_DIR / "farm.html")
+
+    @app.get("/demo", include_in_schema=False)
+    async def demo_index():
+        # Landing page that links out to every per-engine demo. Avoids
+        # making the user remember the /farm/<engine> paths.
+        return FileResponse(_FRONTEND_DIR / "demo_index.html")
+
+    # Controlled-demo pages — one per engine. Each page sends only predefined
+    # dropdown values to its /engine/* endpoint (see app/api/routes/demo.py).
+    _DEMO_PAGES = {
+        "crop-stage": "demo_crop_stage.html",
+        "fertilizer": "demo_fertilizer.html",
+        "pest-risk":  "demo_pest_risk.html",
+        "ipm":        "demo_ipm.html",
+        "yield":      "demo_yield.html",
+    }
+
+    @app.get("/farm/{page}", include_in_schema=False)
+    async def farm_demo_page(page: str):
+        filename = _DEMO_PAGES.get(page)
+        if not filename:
+            return FileResponse(_FRONTEND_DIR / "farm.html")
+        return FileResponse(_FRONTEND_DIR / filename)

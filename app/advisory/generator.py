@@ -271,9 +271,19 @@ def _validate(raw: str) -> EngineAdvisory | None:
     except json.JSONDecodeError as exc:
         log.debug("validate: json_decode_error: %s | raw_head=%r", exc, (raw or "")[:200])
         return None
+
+    # Gemini occasionally wraps the object in a single-element list — unwrap.
+    if isinstance(data, list) and len(data) == 1 and isinstance(data[0], dict):
+        data = data[0]
     if not isinstance(data, dict):
         log.debug("validate: not_a_dict type=%s", type(data).__name__)
         return None
+
+    # Gemini occasionally returns details as a string instead of an object —
+    # promote it to {"reasoning": <str>} so the contract is satisfied.
+    if isinstance(data.get("details"), str):
+        data["details"] = {"reasoning": data["details"]}
+
     try:
         return EngineAdvisory.model_validate(data)
     except ValidationError as exc:
