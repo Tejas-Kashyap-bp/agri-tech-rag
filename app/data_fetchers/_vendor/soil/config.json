@@ -1,0 +1,9 @@
+{
+  "priority_order": ["farmer", "soilgrids", "supabase"],
+  "confidence_scores": {
+    "farmer":      1.0,
+    "soilgrids":   0.6,
+    "supabase":    0.4,
+    "unavailable": 0.0
+  }
+}

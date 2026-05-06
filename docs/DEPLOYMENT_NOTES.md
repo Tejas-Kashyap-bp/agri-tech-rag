@@ -98,11 +98,10 @@ The endpoint does `await file.read()` — the entire upload is buffered into mem
 
 Becomes moot once CORS is properly tightened (item 1).
 
-### 9. `_INTEGRATED_PATH` resolution is silent on missing directory
+### 9. ~~`_INTEGRATED_PATH` resolution is silent on missing directory~~ (resolved)
 
-**Location:** `app/config.py:30`
-
-If the sibling `Agri-integrated` repo is not present, the path is silently ignored. A debug-level log when the sibling is missing would make first-deploy issues much easier to diagnose.
+The cross-repo dependency on `Agri-integrated` has been removed; the
+fetchers are now vendored under `app/data_fetchers/_vendor/`.
 
 ### 10. Some over-commented blocks
 

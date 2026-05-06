@@ -37,7 +37,7 @@ conda run -n agri python -c '...'
 ## Common commands
 
 ```bash
-# Backend API (port 8000 per README, 8765 used in test/comparison work to avoid conflict with Agri-integrated)
+# Backend API (port 8000 per README; 8765 sometimes used in test/comparison work to avoid conflicts)
 conda run -n agri uvicorn app.main:app --reload --port 8000
 
 # Frontend dev UI (separate terminal, separate port)
@@ -87,11 +87,17 @@ Active provider: **Gemini** (`gemini-2.5-flash`) via `app/llm/gemini_provider.py
 
 ---
 
-## Cross-repo dependency
+## Vendored data fetchers
 
-This project loads `<AGRI_INTEGRATED_PATH>/.env` (sibling repo `Agri-integrated`) before its own `.env` (see `app/config.py`). Supabase credentials live there. agri-rag's own `.env` wins on key conflicts. If `Agri-integrated` is not checked out as a sibling, set `AGRI_INTEGRATED_PATH` explicitly.
+The Supabase farm registry (`user.py`), Open-Meteo weather (`weather.py`),
+SoilGrids soil pipeline (`soil/`), and Sentinel Hub satellite (`satellite.py`)
+fetchers live under `app/data_fetchers/_vendor/`. This repository is
+self-contained — no sibling checkout is required. All credentials are read
+from this repo's own `.env` (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
+`SENTINEL_CLIENT_ID`, `SENTINEL_CLIENT_SECRET`, etc.).
 
-The `Agri-integrated` repo is the **rule-based ground truth** that agri-rag is benchmarked against. See `testing/GEMINI_VS_INTEGRATED_REPORT.md` for the head-to-head test methodology and results across all six engines.
+The original rule-based system that agri-rag is benchmarked against is
+described in `testing/GEMINI_VS_INTEGRATED_REPORT.md` (historical record).
 
 ---
 
@@ -114,18 +120,18 @@ Live signal fetchers are wired in but ship with deliberate constraints. Future w
 
 ### Sentinel Hub satellite (E3 + E5)
 
-- **No window caching.** `app/data_fetchers/satellite_live.py` calls `get_satellite_features()` (sibling repo `Agri-integrated/data_fetchers/satellite.py`) which walks **every 5-day window from `sowing_date` to today** on every `/farm-advisory` request. For a 14-month-old apple farm that is ~150 Process API calls / ~150 Processing Units per advisory.
+- **No window caching.** `app/data_fetchers/satellite_live.py` calls `get_satellite_features()` (vendored at `app/data_fetchers/_vendor/satellite.py`) which walks **every 5-day window from `sowing_date` to today** on every `/farm-advisory` request. For a 14-month-old apple farm that is ~150 Process API calls / ~150 Processing Units per advisory.
 - **Trial quota is shared with the client.** SH credentials in `.env` are on Planet Insights' free trial (29-day expiry from issue date). Burn rate above will exhaust the trial in ~200 advisories. Token mint is cached in-process (1/hour); window results are not cached anywhere.
 - **/farm-advisory latency is dominated by satellite.** First call for a long-running perennial can take 90–180 s. `PER_ENGINE_TIMEOUT_S=45` in `orchestrator.py` is on the LLM call only — satellite enrichment runs *before* the engine timer starts and has no internal deadline. If a request hangs, suspect SH first.
 - **Polygon is synthesized when Supabase has none.** `farm_polygon` is NULL for the apple-demo farms today. The adapter falls back to a square bbox of side `√(farm_area_m2)` centered on `latitude`/`longitude` with a 30 m floor. Sentinel-2 native resolution is 10 m so a 1-acre farm averages ~36 pixels per index — good enough for advisory means but **not** representative of irregularly shaped real orchards. Populate `farms.farm_polygon` in Supabase to get true field-shape readings; the adapter prefers the stored polygon whenever it is present.
-- **Cross-repo evalscript change.** The 4-band evalscript (`NDVI`, `NDWI`, `NDRE`, `EVI`) lives in `Agri-integrated/data_fetchers/satellite.py`, not in this repo. If you re-tune bands or add indices, the evalscript edit and the array-read indexing in `_fetch_window` must change together over there, and `app/data_fetchers/satellite_live.py` must remap the new keys into what `satellite_layer.py` / `yield_layer.py` consume.
+- **Evalscript location.** The 4-band evalscript (`NDVI`, `NDWI`, `NDRE`, `EVI`) lives in `app/data_fetchers/_vendor/satellite.py`. If you re-tune bands or add indices, the evalscript edit and the array-read indexing in `_fetch_window` must change together, and `app/data_fetchers/satellite_live.py` must remap the new keys into what `satellite_layer.py` / `yield_layer.py` consume.
 - **No live → demo fallback.** `satellite_demo.py` was deleted intentionally. If the live fetch raises, `_enrich_context_with_live_satellite` swallows the exception and the engine runs **without satellite-derived nudges** — it does not silently substitute fake numbers. Empty `_satellite_debug` in an E3 result therefore means "fetch failed," not "demo data."
 
 When the trial is replaced with paid SH access (or CDSE), revisit the no-cache stance: a per-(farm, date) cache plus a "last-N-days" short-window mode would cut PU spend ~10×.
 
 ### Open-Meteo leaf-wetness proxy (E4)
 
-- **Single global threshold.** `Agri-integrated/data_fetchers/weather.py` derives `conducive_duration_hrs` as the longest run in the last 48 h where `RH ≥ 90 %` AND `T ≥ 5 °C`. This is the Mills-table surrogate for apple scab; it does **not** match the per-pest temp/RH bands in `apple_pest_disease_condition_rule.json` (e.g. San Jose Scale conducive window is `RH 50–80 %`, never triggers a 90 % cutoff). E4 rule-evaluation in `app/api/routes/advisory.py:_evaluate_rules` therefore sees a duration that under-reports risk for most non-scab organisms.
+- **Single global threshold.** `app/data_fetchers/_vendor/weather.py` derives `conducive_duration_hrs` as the longest run in the last 48 h where `RH ≥ 90 %` AND `T ≥ 5 °C`. This is the Mills-table surrogate for apple scab; it does **not** match the per-pest temp/RH bands in `apple_pest_disease_condition_rule.json` (e.g. San Jose Scale conducive window is `RH 50–80 %`, never triggers a 90 % cutoff). E4 rule-evaluation in `app/api/routes/advisory.py:_evaluate_rules` therefore sees a duration that under-reports risk for most non-scab organisms.
 - **Roadmap.** Replace the global proxy with per-rule duration computed from the same hourly arrays — count consecutive hours where each rule's own `temp_c` and `humidity_pct` bands are satisfied. Keep the global metric only as a scab-specific signal under a different name. No code changes are in flight for this yet; do not assume the duration field is per-organism.
 
 ### Supabase

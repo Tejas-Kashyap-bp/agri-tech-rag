@@ -33,7 +33,6 @@ import json
 import logging
 import math
 import os
-import sys
 import tempfile
 import threading
 import time
@@ -41,16 +40,9 @@ from datetime import date as _date, timedelta
 from pathlib import Path
 from typing import Any, Optional
 
-from app.config import settings  # ensures .env is loaded into os.environ
+from app.config import settings  # noqa: F401  ensures .env is loaded into os.environ
 
-_INTEGRATED_PATH = settings.AGRI_INTEGRATED_PATH
-if _INTEGRATED_PATH and _INTEGRATED_PATH not in sys.path:
-    sys.path.insert(0, _INTEGRATED_PATH)
-
-from data_fetchers.satellite import (  # type: ignore  # noqa: E402
-    get_satellite_features,
-    get_token,
-)
+from ._vendor.satellite import get_satellite_features, get_token
 
 
 log = logging.getLogger("data_fetchers.satellite_live")

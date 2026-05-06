@@ -4,6 +4,13 @@
 **Date:** 2026-04-29
 **Author:** agri-rag engineering
 
+> **Historical note (2026-05-06):** This report documents a head-to-head
+> benchmark run when agri-rag still depended on the sibling `Agri-integrated`
+> checkout. That dependency has since been removed — the data fetchers are now
+> vendored inside this repo at `app/data_fetchers/_vendor/`. Sections below
+> that refer to a sibling checkout (e.g. §10 Reproducibility) describe the
+> setup at the time of the test, not the current repository layout.
+
 ## Executive Summary
 
 The Gemini-powered RAG system (`agri-rag`) was tested head-to-head against the deterministic rule-based system (`agri-integrated`) which serves as ground truth. Both systems were run simultaneously on the same inputs across four agronomic engines.
