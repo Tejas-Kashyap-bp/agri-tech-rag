@@ -29,3 +29,6 @@ frontend-react/chroma_db/
 
 # Scratch / temporary scripts
 .tmp_*
+
+# Per-farm-per-day Sentinel Hub cache (regenerated at runtime)
+app/storage/satellite_cache/

@@ -7,6 +7,8 @@ Never overwrites existing keys. Never raises on missing data.
 
 Guardrails:
   1. apple_scab_guardrail          — LWI + LWD + ASRI risk model
+  1b. lai_biomass_scab_guardrail   — LAI canopy-density modifier (additive,
+       does not modify ASRI/LWD/LWI; produces always-on apple_scab_final)
   2. rain_after_spray_guardrail    — forecast rain wash-off check (12 h)
   3. pre_rain_spray_guardrail      — block spray before imminent rain (12 h)
   4. wind_spray_guardrail          — block/delay spray during high wind (6 h)
@@ -295,6 +297,309 @@ def _apple_scab_advisory(risk: str) -> dict:
         },
     }
     return _map.get(risk, _map["UNKNOWN"])
+
+
+# ─── 1b. LAI / BIOMASS SCAB MODIFIER (additive, non-breaking) ────────────────
+# Augments the apple_scab_guardrail above with a canopy-density (LAI) modifier.
+# Does NOT modify ASRI, LWD, LWI, or the base risk_level. Adds a separate
+# `lai_biomass_scab_guardrail` block + a flat `apple_scab_final` summary so the
+# UI can always display apple-scab status regardless of base risk.
+
+_LAI_LOW_MAX: float = 2.0
+_LAI_HIGH_MIN: float = 4.0
+
+_BASE_CONFIDENCE_NUMERIC = {"HIGH": 90, "MEDIUM": 70, "LOW": 40}
+
+
+def _extract_lai(
+    context_extra: Optional[dict],
+    e41_details: Optional[dict],
+) -> Any:
+    """Pull LAI from explicit input, satellite enrichment, or NDVI proxy.
+    Returns a float or the string 'UNKNOWN'. Never raises."""
+    candidates: list[Any] = []
+    try:
+        ex = context_extra or {}
+        for key in ("lai", "LAI", "leaf_area_index"):
+            if ex.get(key) is not None:
+                candidates.append(ex.get(key))
+        sat_ex = ex.get("satellite") if isinstance(ex.get("satellite"), dict) else None
+        if sat_ex:
+            for key in ("lai", "LAI", "leaf_area_index"):
+                if sat_ex.get(key) is not None:
+                    candidates.append(sat_ex.get(key))
+
+        det = e41_details or {}
+        for key in ("satellite", "_satellite_debug", "satellite_debug"):
+            blk = det.get(key)
+            if isinstance(blk, dict):
+                for lkey in ("lai", "LAI", "leaf_area_index"):
+                    if blk.get(lkey) is not None:
+                        candidates.append(blk.get(lkey))
+
+        for c in candidates:
+            f = _safe_float(c)
+            if f is not None:
+                return f
+
+        # NDVI-derived proxy (Beer–Lambert style): LAI ≈ -ln(1 - NDVI) / k, k≈0.5.
+        ndvi_val = None
+        for src in (context_extra or {}, (context_extra or {}).get("satellite") or {},
+                    (e41_details or {}).get("satellite") or {},
+                    (e41_details or {}).get("_satellite_debug") or {}):
+            if isinstance(src, dict):
+                for nkey in ("ndvi", "NDVI", "ndvi_mean", "ndvi_avg"):
+                    if src.get(nkey) is not None:
+                        ndvi_val = _safe_float(src.get(nkey))
+                        if ndvi_val is not None:
+                            break
+                if ndvi_val is not None:
+                    break
+        if ndvi_val is not None and 0.0 < ndvi_val < 1.0:
+            try:
+                return round(-math.log(1.0 - ndvi_val) / 0.5, 2)
+            except (ValueError, ZeroDivisionError):
+                pass
+    except Exception:
+        log.warning("lai_extract_failed", exc_info=True)
+    return "UNKNOWN"
+
+
+def _classify_canopy_density(lai_value: Any) -> str:
+    f = _safe_float(lai_value)
+    if f is None:
+        return "UNKNOWN"
+    if f < _LAI_LOW_MAX:
+        return "LOW"
+    if f < _LAI_HIGH_MIN:
+        return "MEDIUM"
+    return "HIGH"
+
+
+def _lai_modifier_for(canopy_density: str) -> tuple[float, str, int]:
+    """Return (scab_modifier, effect_on_risk, confidence_delta)."""
+    if canopy_density == "LOW":
+        return 0.9, "SLIGHTLY_REDUCED", -5
+    if canopy_density == "HIGH":
+        return 1.3, "INCREASED", 10
+    if canopy_density == "MEDIUM":
+        return 1.0, "NO_CHANGE", 0
+    return 1.0, "UNKNOWN", 0
+
+
+def _apply_canopy_to_risk(base_risk: str, canopy_density: str) -> str:
+    """Bump base risk one step when canopy is HIGH; otherwise pass through."""
+    if canopy_density != "HIGH":
+        return base_risk
+    return {
+        "LOW": "MODERATE",
+        "MODERATE": "HIGH",
+        "HIGH": "VERY_HIGH",
+    }.get(base_risk, base_risk)
+
+
+def _wetness_status_from(scab_g: dict) -> str:
+    lwd = scab_g.get("lwd_hours")
+    if lwd is None:
+        return "UNKNOWN"
+    try:
+        lwd_f = float(lwd)
+    except (TypeError, ValueError):
+        return "UNKNOWN"
+    if lwd_f <= 0:
+        return "DRY"
+    if lwd_f < 6:
+        return "BRIEFLY_WET"
+    if lwd_f < 12:
+        return "EXTENDED_WET"
+    return "PROLONGED_WET"
+
+
+def apply_lai_scab_guardrail(
+    scab_g: dict,
+    context_extra: Optional[dict],
+    e41_details: Optional[dict],
+) -> tuple[dict, dict]:
+    """
+    Build the LAI biomass-scab modifier block and the always-on
+    `apple_scab_final` summary.
+
+    Returns (lai_block, apple_scab_final). Never raises; both blocks are
+    populated even when LAI or weather is missing so the UI can always
+    show apple-scab status.
+    """
+    base_risk = (scab_g or {}).get("risk_level", "UNKNOWN")
+    base_conf_str = (scab_g or {}).get("confidence", "LOW")
+    base_conf_num = _BASE_CONFIDENCE_NUMERIC.get(str(base_conf_str).upper(), 40)
+
+    try:
+        lai_value = _extract_lai(context_extra, e41_details)
+        canopy = _classify_canopy_density(lai_value)
+        modifier, effect, conf_delta = _lai_modifier_for(canopy)
+        adjusted = _apply_canopy_to_risk(base_risk, canopy)
+
+        final_confidence = max(0, min(100, base_conf_num + conf_delta))
+
+        lai_block = {
+            "enabled": True,
+            "lai_value": lai_value if isinstance(lai_value, (int, float)) else "UNKNOWN",
+            "canopy_density": canopy,
+            "scab_modifier": modifier,
+            "effect_on_risk": effect,
+            "base_scab_risk": base_risk,
+            "adjusted_scab_risk": adjusted,
+            "confidence_adjustment": (
+                f"+{conf_delta}" if conf_delta > 0 else str(conf_delta)
+            ),
+            "reason": (
+                "Dense canopy increases humidity retention and slows drying, "
+                "increasing scab risk."
+                if canopy == "HIGH"
+                else "Sparse canopy reduces trapped humidity — scab risk slightly reduced."
+                if canopy == "LOW"
+                else "Canopy density is moderate — no change to base scab risk."
+                if canopy == "MEDIUM"
+                else "LAI not available — no canopy-based modification applied."
+            ),
+            "explainability": [
+                "High LAI indicates dense canopy",
+                "Dense canopy reduces airflow",
+                "Reduced airflow increases leaf wetness duration",
+                "Higher wetness duration increases apple scab infection risk",
+            ],
+        }
+
+        apple_scab_final = {
+            "base_risk": base_risk,
+            "adjusted_risk": adjusted,
+            "lwd_hours": (scab_g or {}).get("lwd_hours"),
+            "wetness_status": _wetness_status_from(scab_g or {}),
+            "lai_value": lai_block["lai_value"],
+            "canopy_density": canopy,
+            "lai_effect": effect,
+            "final_confidence": final_confidence,
+            "advisory_flag": True,
+            "advisory": _final_scab_message(adjusted),
+        }
+        return lai_block, apple_scab_final
+    except Exception:
+        log.warning("lai_scab_guardrail error", exc_info=True)
+        # Graceful fallback — base risk only, advisory still always present.
+        return (
+            {
+                "enabled": True,
+                "lai_value": "UNKNOWN",
+                "canopy_density": "UNKNOWN",
+                "scab_modifier": 1.0,
+                "effect_on_risk": "UNKNOWN",
+                "base_scab_risk": base_risk,
+                "adjusted_scab_risk": base_risk,
+                "confidence_adjustment": "0",
+                "reason": "LAI guardrail failed — falling back to base risk.",
+                "explainability": [
+                    "LAI biomass modifier could not be computed.",
+                    "Base apple scab risk is preserved.",
+                ],
+            },
+            {
+                "base_risk": base_risk,
+                "adjusted_risk": base_risk,
+                "lwd_hours": (scab_g or {}).get("lwd_hours"),
+                "wetness_status": _wetness_status_from(scab_g or {}),
+                "lai_value": "UNKNOWN",
+                "canopy_density": "UNKNOWN",
+                "lai_effect": "UNKNOWN",
+                "final_confidence": base_conf_num,
+                "advisory_flag": True,
+                "advisory": _final_scab_message(base_risk),
+            },
+        )
+
+
+# Risk level → farmer-readable percentage band. Used by every E4.1 caller
+# (demo /engine/pest-risk AND production /farm-advisory) so the visible
+# summary is identical regardless of surface.
+_SCAB_RISK_PCT_BAND: dict[str, tuple[int, int]] = {
+    "LOW":       (10, 20),
+    "MODERATE":  (35, 50),
+    "HIGH":      (60, 75),
+    "VERY_HIGH": (75, 85),
+    "SEVERE":    (85, 95),
+}
+
+
+def build_farmer_friendly_scab_summary(
+    risk: str,
+    weather: Optional[dict],
+    canopy: str,
+) -> str:
+    """Max-2-line, jargon-free apple-scab summary line for the main advisory.
+
+    Line 1: "Apple Scab risk is around X% (level)."
+    Line 2: short cause built from humidity / wetness duration / canopy.
+
+    For LOW / UNKNOWN risk this returns a SINGLE concise line so the rest
+    of the LLM advisory (other pests/diseases) can take the spotlight.
+    Apple Scab is always present, but proportional — short when conditions
+    are unfavourable, longer when risk is real.
+
+    Pure post-processing — no LLM call. Same function used by every E4.1
+    caller so /farm-advisory and /farm/pest-risk emit the same line.
+    """
+    summary = (weather or {}).get("summary") or {}
+    rh = summary.get("humidity_pct")
+    dur = summary.get("conducive_duration_hrs")
+    temp = summary.get("temperature_c")
+
+    band = _SCAB_RISK_PCT_BAND.get(risk)
+    if band is None:
+        return ("Apple Scab risk could not be estimated — weather data is "
+                "incomplete. Continue routine monitoring.")
+    pct_mid = (band[0] + band[1]) // 2
+    level_word = {
+        "LOW": "low", "MODERATE": "moderate", "HIGH": "high",
+        "VERY_HIGH": "very high", "SEVERE": "severe",
+    }.get(risk, risk.lower())
+
+    if risk == "LOW":
+        return (
+            f"Apple Scab risk is {level_word} (around {pct_mid}%) — "
+            f"today's conditions are not favourable for scab. Continue "
+            f"routine monitoring; other pests/diseases may still need attention."
+        )
+
+    reasons: list[str] = []
+    if isinstance(rh, (int, float)) and rh >= 90:
+        reasons.append(f"high humidity ({int(rh)}%)")
+    elif isinstance(rh, (int, float)) and rh >= 70:
+        reasons.append(f"moderate humidity ({int(rh)}%)")
+    if isinstance(dur, (int, float)) and dur >= 12:
+        reasons.append(f"leaves stay wet for ~{int(dur)} h")
+    elif isinstance(dur, (int, float)) and dur > 0:
+        reasons.append(f"leaves wet for ~{int(dur)} h")
+    if canopy == "HIGH":
+        reasons.append("dense canopy traps moisture")
+    if isinstance(temp, (int, float)) and 16 <= temp <= 24:
+        reasons.append(f"mild temperatures ({int(temp)}°C) favour the fungus")
+
+    cause = ", ".join(reasons) if reasons else "current weather is favourable for scab development"
+    return f"Apple Scab risk is around {pct_mid}% ({level_word}).\nReason: {cause}."
+
+
+def _final_scab_message(risk: str) -> dict:
+    msgs = {
+        "LOW": "Low risk of apple scab, continue monitoring.",
+        "MODERATE": "Moderate risk of apple scab, preventive measures recommended.",
+        "HIGH": "High risk of apple scab, protective action advised.",
+        "VERY_HIGH": "Very high risk of apple scab, immediate attention required.",
+        "SEVERE": "Severe risk of apple scab, immediate spray required.",
+        "UNKNOWN": "Apple scab risk could not be determined — weather/LAI data missing.",
+    }
+    return {
+        "risk_level": risk,
+        "message": msgs.get(risk, msgs["UNKNOWN"]),
+        "always_visible": True,
+    }
 
 
 # ─── 2. RAIN AFTER SPRAY GUARDRAIL ───────────────────────────────────────────
@@ -948,6 +1253,52 @@ def decorate_with_guardrails(
         e41_result["details"].setdefault("apple_scab_guardrail", scab_g)
         e42_result["details"].setdefault("apple_scab_advisory",
                                           _apple_scab_advisory(scab_g.get("risk_level", "UNKNOWN")))
+
+        # ── 1b. LAI / biomass canopy modifier (additive, non-breaking) ────
+        lai_block, apple_scab_final = apply_lai_scab_guardrail(
+            scab_g=scab_g,
+            context_extra=ex,
+            e41_details=e41_result.get("details"),
+        )
+        e41_result["details"].setdefault("lai_biomass_scab_guardrail", lai_block)
+        e41_result["details"].setdefault("apple_scab_final", apple_scab_final)
+        e42_result["details"].setdefault("apple_scab_final", apple_scab_final)
+
+        # Prepend the farmer-friendly apple-scab line to E4.1's summary so
+        # every caller (production /farm-advisory and demo /engine/pest-risk
+        # alike) emits the SAME visible advisory. Pure string mutation —
+        # no extra LLM call. Idempotent: skipped if the line is already there.
+        try:
+            adjusted = (
+                apple_scab_final.get("adjusted_risk")
+                or apple_scab_final.get("base_risk") or "UNKNOWN"
+            )
+            scab_line = build_farmer_friendly_scab_summary(
+                risk=adjusted,
+                weather=weather,
+                canopy=apple_scab_final.get("canopy_density") or "UNKNOWN",
+            )
+            existing = (e41_result.get("summary") or "").strip()
+            if "Apple Scab risk" not in existing:
+                e41_result["summary"] = (
+                    f"{scab_line}\n\n{existing}" if existing else scab_line
+                )
+
+            # Surface scab in triggered_organisms so downstream IPM (E4.2)
+            # picks it up. Only when adjusted risk is actionable. Substring
+            # dedup against existing entries (which may be dicts or strings).
+            if adjusted in ("MODERATE", "HIGH", "VERY_HIGH", "SEVERE"):
+                triggered = e41_result["details"].get("triggered_organisms")
+                if not isinstance(triggered, list):
+                    triggered = []
+                already = any("scab" in str(
+                    (t or {}).get("organism_name") if isinstance(t, dict) else t
+                ).lower() for t in triggered)
+                if not already:
+                    triggered.append("Apple Scab")
+                    e41_result["details"]["triggered_organisms"] = triggered
+        except Exception:
+            log.warning("apple_scab_summary_inject_failed", exc_info=True)
 
         # Determine spray_recommended for downstream guardrails
         if "spray_recommended" in ex:

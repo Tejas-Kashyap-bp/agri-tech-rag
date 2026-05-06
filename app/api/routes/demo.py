@@ -91,6 +91,21 @@ _HUM_PCT = {"Dry (40%)": 40.0, "Moderate (70%)": 70.0, "Humid (95%)": 95.0}
 Duration = Literal["Short (8 h)", "Medium (12 h)", "Long (24 h)", "Very Long (48 h)"]
 _DUR_HRS = {"Short (8 h)": 8, "Medium (12 h)": 12, "Long (24 h)": 24, "Very Long (48 h)": 48}
 
+# Canopy density dropdown for the pest-risk demo. NDVI values are chosen so
+# the LAI proxy (LAI ≈ -ln(1 - NDVI) / 0.5) lands cleanly inside each canopy
+# bucket consumed by lai_biomass_scab_guardrail (LOW <2, MEDIUM 2–<4, HIGH ≥4):
+#   NDVI 0.40 → LAI≈1.02  (LOW)
+#   NDVI 0.70 → LAI≈2.41  (MEDIUM)
+#   NDVI 0.88 → LAI≈4.24  (HIGH)
+# "Unknown" intentionally omits NDVI so the guardrail reports canopy=UNKNOWN.
+Canopy = Literal["Unknown", "Sparse (NDVI 0.40)", "Moderate (NDVI 0.70)", "Dense (NDVI 0.88)"]
+_NDVI_FOR_CANOPY: dict[str, Optional[float]] = {
+    "Unknown": None,
+    "Sparse (NDVI 0.40)": 0.40,
+    "Moderate (NDVI 0.70)": 0.70,
+    "Dense (NDVI 0.88)": 0.88,
+}
+
 TreeCount = Literal["100", "200", "500"]
 
 TriggeredOrganism = Literal[
@@ -225,6 +240,28 @@ def _run(
         _decorate_with_nutrition_guardrails(result, context)
     if spec.engine_id == "e5_yield":
         _decorate_with_yield_calculation(result, context)
+    if spec.engine_id == "e4_pest_disease_risk":
+        # One source of truth for apple-scab post-processing — the same
+        # decorator the production /farm-advisory orchestrator uses. Pure
+        # post-LLM string + dict mutation, NO extra LLM call. We pass an
+        # empty dict for the E4.2 slot because this demo endpoint only
+        # returns E4.1; the decorator writes E4.2 fields into that dict
+        # which we then discard.
+        try:
+            from app.advisory.guardrails import decorate_with_guardrails
+            decorate_with_guardrails(
+                e41_result=result,
+                e42_result={"details": {}},
+                weather=context.weather,
+                context_extra=context.extra,
+                current_date=context.current_date,
+                e1_summary=(upstream_outputs or {}).get("e1_stage", {}).get("summary"),
+            )
+        except Exception:
+            import logging
+            logging.getLogger("demo.pest_risk").warning(
+                "apple_scab_decoration_failed", exc_info=True,
+            )
     return {
         **result,
         "status": "ok" if result.get("parse_status") != "error" else "error",
@@ -283,16 +320,26 @@ class PestRiskRequest(BaseModel):
     temperature: Temperature
     humidity: Humidity
     duration: Duration
+    # Optional with a safe default so existing callers / saved harnesses
+    # without a `canopy` field continue to work unchanged.
+    canopy: Canopy = "Unknown"
 
 
 @router.post("/engine/pest-risk", tags=["demo"])
 def demo_pest_risk(req: PestRiskRequest):
+    extra: dict[str, Any] = {"farm_area_acres": 1.0, "tree_count": 109}
+    ndvi = _NDVI_FOR_CANOPY.get(req.canopy)
+    if ndvi is not None:
+        # Pass NDVI through extra.satellite so _extract_lai's NDVI proxy
+        # (LAI ≈ -ln(1 - NDVI) / 0.5) fires inside the LAI biomass guardrail.
+        # No live Sentinel Hub call — this is a demo-controlled value.
+        extra["satellite"] = {"ndvi": ndvi, "source": "demo-controlled"}
     ctx = AdvisoryContext(
         crop=CROP,
         sowing_date=DEFAULT_SOWING,
         current_date=date.today(),
         weather=_build_weather_for_pest(req.temperature, req.humidity, req.duration),
-        extra={"farm_area_acres": 1.0, "tree_count": 109},
+        extra=extra,
     )
     out = _run(_spec("e4_pest_disease_risk"), ctx, _stage_upstream(req.crop_stage))
     return {"inputs": req.model_dump(), "output": out}

@@ -84,7 +84,11 @@ log = logging.getLogger("advisory.orchestrator")
 # timeout — so the engine's worst-case wall clock is 2 × this value. With
 # 22.5s, worst case = 45s, which matches the per-tier budget assumed below.
 PER_ENGINE_TIMEOUT_S: float = 90.0
-REQUEST_DEADLINE_S: float = 360.0
+# Raised from 360s. With Sentinel Hub now pre-fetched ONCE before Tier 1
+# (instead of E3 and E5 each walking ~150 windows in parallel), the SH cost
+# is paid once, so the per-tier worst case is ~180s × 3 tiers = 540s. 600s
+# gives headroom so E4.2 (Tier 3) reliably starts.
+REQUEST_DEADLINE_S: float = 600.0
 
 # Single source of truth for inter-engine dependencies. Both
 # generate_advisories (tier-parallel path) and generate_single (per-engine
@@ -233,6 +237,18 @@ async def generate_advisories(context: AdvisoryContext, k: int = 1) -> dict[str,
     )
 
     advisories: dict[str, Any] = {}
+
+    # ---- Tier 0: Sentinel Hub satellite pre-fetch -------------------------
+    # E3 (nutrition) and E5 (yield) both consume the same NDVI / NDRE / EVI
+    # block. Previously each engine called _enrich_context_with_live_satellite
+    # itself, so the ~150-window SH walk ran twice in parallel — racing the
+    # SH trial rate limit and inflating wall-clock. Doing it ONCE up front
+    # (with the idempotency guard inside _enrich_context_with_live_satellite)
+    # turns the second call into a no-op and frees Tier 2 budget for the LLM
+    # round-trips. Failures are already swallowed inside the helper, so a
+    # broken SH call still lets the engines run with whatever satellite
+    # values the caller passed.
+    context = await asyncio.to_thread(_enrich_context_with_live_satellite, context)
 
     # ---- Tier 1: E1 (stage) — must finish before E2-E5 can start ----------
     e1_spec = _spec_by_id("e1_stage")
@@ -462,6 +478,14 @@ def _enrich_context_with_live_satellite(context: AdvisoryContext) -> AdvisoryCon
     the engine continues with whatever satellite data the caller passed (or
     none, in which case the engine simply skips satellite-derived nudges)."""
     try:
+        # Idempotency guard: if a prior step already populated context.satellite
+        # with a live SH reading, do not re-fetch. This lets generate_advisories
+        # pre-fetch ONCE before Tier 1 and have E3 / E5 reuse the result instead
+        # of each launching their own ~150-window walk against the rate-limited
+        # SH trial.
+        if (context.satellite or {}).get("source") == "sentinel-hub":
+            return context
+
         from app.data_fetchers.satellite_live import get_satellite_data
 
         extra = context.extra or {}
