@@ -325,7 +325,7 @@ def _extract_lai(
                 candidates.append(ex.get(key))
         sat_ex = ex.get("satellite") if isinstance(ex.get("satellite"), dict) else None
         if sat_ex:
-            for key in ("lai", "LAI", "leaf_area_index"):
+            for key in ("lai", "LAI", "leaf_area_index", "lai_current"):
                 if sat_ex.get(key) is not None:
                     candidates.append(sat_ex.get(key))
 
@@ -333,7 +333,7 @@ def _extract_lai(
         for key in ("satellite", "_satellite_debug", "satellite_debug"):
             blk = det.get(key)
             if isinstance(blk, dict):
-                for lkey in ("lai", "LAI", "leaf_area_index"):
+                for lkey in ("lai", "LAI", "leaf_area_index", "lai_current"):
                     if blk.get(lkey) is not None:
                         candidates.append(blk.get(lkey))
 
@@ -528,62 +528,99 @@ _SCAB_RISK_PCT_BAND: dict[str, tuple[int, int]] = {
 }
 
 
+_CANOPY_WORD = {"LOW": "sparse", "MEDIUM": "moderate", "HIGH": "dense", "UNKNOWN": "unknown"}
+
+
+def _scab_action_for(risk: str) -> str:
+    return {
+        "LOW": "Continue routine monitoring; no spray needed.",
+        "MODERATE": "Apply preventive scab cover spray before the next wet event.",
+        "HIGH": "Apply protective fungicide before the next rainfall.",
+        "VERY_HIGH": "Spray immediately and re-inspect within 7 days.",
+        "SEVERE": "Spray immediately; do not delay — infection pressure is severe.",
+        "UNKNOWN": "Insufficient data — continue routine monitoring until weather data is available.",
+    }.get(risk, "Continue routine monitoring.")
+
+
 def build_farmer_friendly_scab_summary(
     risk: str,
     weather: Optional[dict],
     canopy: str,
+    lai_value: Any = None,
+    lwd_hours: Any = None,
 ) -> str:
-    """Max-2-line, jargon-free apple-scab summary line for the main advisory.
+    """Three-line apple-scab summary for the main advisory.
 
-    Line 1: "Apple Scab risk is around X% (level)."
-    Line 2: short cause built from humidity / wetness duration / canopy.
+    Format:
+      Apple Scab Risk: X%
+      Reason: LAI of <v> indicates <density> canopy. Combined with <weather>,
+              leaf surfaces are likely wet for <duration>, which <does/does not>
+              meet the infection threshold.
+      Action: <recommendation>
 
-    For LOW / UNKNOWN risk this returns a SINGLE concise line so the rest
-    of the LLM advisory (other pests/diseases) can take the spotlight.
-    Apple Scab is always present, but proportional — short when conditions
-    are unfavourable, longer when risk is real.
-
-    Pure post-processing — no LLM call. Same function used by every E4.1
-    caller so /farm-advisory and /farm/pest-risk emit the same line.
+    Always emitted (every advisory) regardless of the user's query. Pure
+    post-processing — no LLM call. Used by every E4.1 caller so /farm-advisory
+    and /farm/pest-risk emit the same block.
     """
     summary = (weather or {}).get("summary") or {}
     rh = summary.get("humidity_pct")
-    dur = summary.get("conducive_duration_hrs")
     temp = summary.get("temperature_c")
+    # Prefer the guardrail's full-rule LWD (rainfall + RH≥90 + dew-point gap +
+    # LWI). Fall back to Open-Meteo's RH-only conducive_duration_hrs when the
+    # guardrail value is not yet available (e.g. weather missing).
+    dur_hrs = lwd_hours if lwd_hours is not None else summary.get("conducive_duration_hrs")
 
     band = _SCAB_RISK_PCT_BAND.get(risk)
-    if band is None:
-        return ("Apple Scab risk could not be estimated — weather data is "
-                "incomplete. Continue routine monitoring.")
-    pct_mid = (band[0] + band[1]) // 2
-    level_word = {
-        "LOW": "low", "MODERATE": "moderate", "HIGH": "high",
-        "VERY_HIGH": "very high", "SEVERE": "severe",
-    }.get(risk, risk.lower())
+    pct_text = (
+        f"{band[0]}–{band[1]}%" if band is not None else "indeterminate (data missing)"
+    )
 
-    if risk == "LOW":
-        return (
-            f"Apple Scab risk is {level_word} (around {pct_mid}%) — "
-            f"today's conditions are not favourable for scab. Continue "
-            f"routine monitoring; other pests/diseases may still need attention."
-        )
+    canopy_word = _CANOPY_WORD.get(canopy, "unknown")
+    lai_text = (
+        f"{lai_value:.2f}" if isinstance(lai_value, (int, float))
+        else str(lai_value) if lai_value not in (None, "")
+        else "unknown"
+    )
 
-    reasons: list[str] = []
-    if isinstance(rh, (int, float)) and rh >= 90:
-        reasons.append(f"high humidity ({int(rh)}%)")
-    elif isinstance(rh, (int, float)) and rh >= 70:
-        reasons.append(f"moderate humidity ({int(rh)}%)")
-    if isinstance(dur, (int, float)) and dur >= 12:
-        reasons.append(f"leaves stay wet for ~{int(dur)} h")
-    elif isinstance(dur, (int, float)) and dur > 0:
-        reasons.append(f"leaves wet for ~{int(dur)} h")
+    weather_bits: list[str] = []
+    if isinstance(temp, (int, float)):
+        weather_bits.append(f"temperature {int(temp)}°C")
+    if isinstance(rh, (int, float)):
+        weather_bits.append(f"humidity {int(rh)}%")
+    weather_ctx = ", ".join(weather_bits) if weather_bits else "current weather"
+
+    if isinstance(dur_hrs, (int, float)) and dur_hrs > 0:
+        wet_text = f"~{int(dur_hrs)} h"
+    elif isinstance(dur_hrs, (int, float)) and dur_hrs == 0:
+        wet_text = "0 h (canopy is essentially dry)"
+    else:
+        wet_text = "an unknown duration"
+
+    # Mills-table threshold: ≥9 h leaf-wetness + 10–24°C → infection.
+    meets_threshold = False
+    if isinstance(dur_hrs, (int, float)) and dur_hrs >= 9:
+        if isinstance(temp, (int, float)) and 10 <= temp <= 24:
+            meets_threshold = True
+        elif temp is None:
+            meets_threshold = True  # duration alone is enough to flag
+    # High canopy density independently raises micro-climate humidity.
     if canopy == "HIGH":
-        reasons.append("dense canopy traps moisture")
-    if isinstance(temp, (int, float)) and 16 <= temp <= 24:
-        reasons.append(f"mild temperatures ({int(temp)}°C) favour the fungus")
+        meets_threshold = True
 
-    cause = ", ".join(reasons) if reasons else "current weather is favourable for scab development"
-    return f"Apple Scab risk is around {pct_mid}% ({level_word}).\nReason: {cause}."
+    threshold_clause = (
+        "meets the infection threshold"
+        if meets_threshold
+        else "does not meet the infection threshold"
+    )
+
+    line1 = f"Apple Scab Risk: {pct_text}"
+    line2 = (
+        f"Reason: LAI of {lai_text} indicates {canopy_word} canopy. "
+        f"Combined with {weather_ctx}, leaf surfaces are likely wet for "
+        f"{wet_text}, which {threshold_clause}."
+    )
+    line3 = f"Action: {_scab_action_for(risk)}"
+    return f"{line1}\n{line2}\n{line3}"
 
 
 def _final_scab_message(risk: str) -> dict:
@@ -1277,9 +1314,11 @@ def decorate_with_guardrails(
                 risk=adjusted,
                 weather=weather,
                 canopy=apple_scab_final.get("canopy_density") or "UNKNOWN",
+                lai_value=apple_scab_final.get("lai_value"),
+                lwd_hours=apple_scab_final.get("lwd_hours"),
             )
             existing = (e41_result.get("summary") or "").strip()
-            if "Apple Scab risk" not in existing:
+            if "Apple Scab Risk" not in existing and "Apple Scab risk" not in existing:
                 e41_result["summary"] = (
                     f"{scab_line}\n\n{existing}" if existing else scab_line
                 )

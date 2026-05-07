@@ -91,19 +91,19 @@ _HUM_PCT = {"Dry (40%)": 40.0, "Moderate (70%)": 70.0, "Humid (95%)": 95.0}
 Duration = Literal["Short (8 h)", "Medium (12 h)", "Long (24 h)", "Very Long (48 h)"]
 _DUR_HRS = {"Short (8 h)": 8, "Medium (12 h)": 12, "Long (24 h)": 24, "Very Long (48 h)": 48}
 
-# Canopy density dropdown for the pest-risk demo. NDVI values are chosen so
-# the LAI proxy (LAI ≈ -ln(1 - NDVI) / 0.5) lands cleanly inside each canopy
-# bucket consumed by lai_biomass_scab_guardrail (LOW <2, MEDIUM 2–<4, HIGH ≥4):
-#   NDVI 0.40 → LAI≈1.02  (LOW)
-#   NDVI 0.70 → LAI≈2.41  (MEDIUM)
-#   NDVI 0.88 → LAI≈4.24  (HIGH)
-# "Unknown" intentionally omits NDVI so the guardrail reports canopy=UNKNOWN.
-Canopy = Literal["Unknown", "Sparse (NDVI 0.40)", "Moderate (NDVI 0.70)", "Dense (NDVI 0.88)"]
-_NDVI_FOR_CANOPY: dict[str, Optional[float]] = {
+# Canopy density dropdown for the pest-risk demo. Now keyed on LAI directly
+# (E4.1 / apple-scab guardrail consumes LAI; NDVI is no longer the input
+# signal). Buckets line up with lai_biomass_scab_guardrail thresholds:
+#   LAI 1.0 → LOW canopy   (<2.0)
+#   LAI 2.5 → MEDIUM       (2.0–<4.0)
+#   LAI 4.5 → HIGH         (≥4.0)
+# "Unknown" omits LAI so the guardrail reports canopy=UNKNOWN.
+Canopy = Literal["Unknown", "Sparse (LAI 1.0)", "Moderate (LAI 2.5)", "Dense (LAI 4.5)"]
+_LAI_FOR_CANOPY: dict[str, Optional[float]] = {
     "Unknown": None,
-    "Sparse (NDVI 0.40)": 0.40,
-    "Moderate (NDVI 0.70)": 0.70,
-    "Dense (NDVI 0.88)": 0.88,
+    "Sparse (LAI 1.0)": 1.0,
+    "Moderate (LAI 2.5)": 2.5,
+    "Dense (LAI 4.5)": 4.5,
 }
 
 TreeCount = Literal["100", "200", "500"]
@@ -328,12 +328,13 @@ class PestRiskRequest(BaseModel):
 @router.post("/engine/pest-risk", tags=["demo"])
 def demo_pest_risk(req: PestRiskRequest):
     extra: dict[str, Any] = {"farm_area_acres": 1.0, "tree_count": 109}
-    ndvi = _NDVI_FOR_CANOPY.get(req.canopy)
-    if ndvi is not None:
-        # Pass NDVI through extra.satellite so _extract_lai's NDVI proxy
-        # (LAI ≈ -ln(1 - NDVI) / 0.5) fires inside the LAI biomass guardrail.
-        # No live Sentinel Hub call — this is a demo-controlled value.
-        extra["satellite"] = {"ndvi": ndvi, "source": "demo-controlled"}
+    lai = _LAI_FOR_CANOPY.get(req.canopy)
+    if lai is not None:
+        # Pass LAI directly into extra.satellite — _extract_lai picks it up
+        # without needing the NDVI proxy. No live Sentinel Hub call; this is
+        # a demo-controlled canopy value.
+        extra["satellite"] = {"lai": lai, "source": "demo-controlled"}
+        extra["lai"] = lai
     ctx = AdvisoryContext(
         crop=CROP,
         sowing_date=DEFAULT_SOWING,

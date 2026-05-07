@@ -19,6 +19,8 @@ from app.llm.base import LLMProvider
 _TRANSIENT_KEYWORDS = (
     "503", "502", "504",
     "deadline", "unavailable", "exhausted", "rate limit", "timeout",
+    "ssl", "connection", "reset", "network", "dns", "getaddrinfo",
+    "temporarily", "broken pipe", "remote end closed",
 )
 
 

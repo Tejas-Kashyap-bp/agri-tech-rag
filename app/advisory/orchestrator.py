@@ -444,11 +444,22 @@ def _decorate_with_guardrails(
     try:
         from app.advisory.guardrails import decorate_with_guardrails
         e1_summary = (e1_output or {}).get("summary") or None
+        # Merge context.satellite (typed slot) into extra so the LAI extractor
+        # in the guardrail can see lai_current / ndvi_current. Without this
+        # merge the guardrail only sees extra.satellite, which production
+        # /farm-advisory does not populate (live SH lands in the typed slot).
+        merged_extra: dict[str, Any] = dict(context.extra or {})
+        if context.satellite:
+            existing_sat = merged_extra.get("satellite")
+            if isinstance(existing_sat, dict):
+                merged_extra["satellite"] = {**context.satellite, **existing_sat}
+            else:
+                merged_extra["satellite"] = dict(context.satellite)
         decorate_with_guardrails(
             e41_result=e41_result,
             e42_result=e42_result,
             weather=context.weather,
-            context_extra=context.extra,
+            context_extra=merged_extra,
             current_date=context.current_date,
             e1_summary=e1_summary,
         )
@@ -536,6 +547,7 @@ def _decorate_with_satellite_advisory(
                 "ndvi_current": sat.get("ndvi_current"),
                 "ndvi_delta_7d": sat.get("ndvi_delta_7d"),
                 "ndre_current": sat.get("ndre_current"),
+                "lai_current": sat.get("lai_current"),
                 "source": sat.get("source", "unknown"),
             },
         )

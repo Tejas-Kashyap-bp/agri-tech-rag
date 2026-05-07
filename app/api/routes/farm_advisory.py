@@ -33,6 +33,7 @@ from pydantic import BaseModel, Field
 from app.advisory import generate_advisories
 from app.advisory.context import AdvisoryContext
 from app.data_fetchers import get_farm_profile, get_soil_data, get_weather_features
+from app.data_fetchers.weather_hourly import fetch_hourly as _fetch_hourly_open_meteo
 
 router = APIRouter()
 
@@ -130,6 +131,62 @@ async def farm_advisory(req: FarmAdvisoryRequest):
         weather = await asyncio.to_thread(_fetch_weather)
     except Exception as exc:
         fetch_errors["weather_fetch"] = f"{type(exc).__name__}: {exc}"
+
+    # The Open-Meteo fetcher returns flat snapshot fields (temperature_c,
+    # humidity_pct, conducive_duration_hrs) but no `hourly` arrays, while the
+    # apple-scab guardrail (LWD/ASRI/LWI) reads hourly temperature_2m /
+    # relative_humidity_2m / precipitation. Synthesize a constant-value hourly
+    # window from the snapshot so the guardrail can compute leaf-wetness on
+    # production farms without modifying the sibling-repo fetcher. Also surface
+    # the snapshot under `summary` so the farmer-facing scab line can quote
+    # exact temperature/humidity numbers.
+    # The sibling Open-Meteo helper strips hourly arrays at _hourly_snapshot,
+    # so the apple-scab guardrail (which needs rainfall + dew point + RH +
+    # wind by hour) only sees a single snapshot. Pull a second, lightweight
+    # Open-Meteo call here that keeps the raw hourly arrays. Falls back to a
+    # constant-value shim if the direct fetch fails.
+    if isinstance(weather, dict) and "hourly" not in weather:
+        hourly_real = None
+        try:
+            hourly_real = await asyncio.to_thread(
+                _fetch_hourly_open_meteo, lat, lon
+            )
+        except Exception:
+            hourly_real = None
+
+        try:
+            t = float(weather.get("temperature_c") or 0.0)
+            rh = float(weather.get("humidity_pct") or 0.0)
+            dur = int(round(float(weather.get("conducive_duration_hrs") or 0.0)))
+            summary_block = {
+                "temperature_c":           t,
+                "humidity_pct":            rh,
+                "conducive_duration_hrs":  dur,
+            }
+            if hourly_real:
+                # Real arrays — all four wet-detection rules now fire:
+                # rainfall, RH≥90, (T-Td)≤2 (dew point), LWI≥0.7.
+                weather = {**weather, "hourly": hourly_real, "summary": summary_block}
+            else:
+                # Synthetic fallback. Seed the first `dur` hours as wet so
+                # LWD matches Open-Meteo's conducive_duration_hrs.
+                window_hours = max(dur, 24)
+                wet_temp = t if t >= 5.0 else 12.0
+                rh_arr  = [95.0] * dur + [rh] * (window_hours - dur)
+                t_arr   = [wet_temp] * dur + [t] * (window_hours - dur)
+                rain_arr = [0.0] * window_hours
+                weather = {
+                    **weather,
+                    "hourly": {
+                        "temperature_2m":       t_arr,
+                        "relative_humidity_2m": rh_arr,
+                        "precipitation":        rain_arr,
+                        "wind_speed_10m":       [float(weather.get("wind_speed_mps") or 3.0)] * window_hours,
+                    },
+                    "summary": summary_block,
+                }
+        except Exception:
+            pass
 
     # ── 3) Build AdvisoryContext ───────────────────────────────────────────
     satellite_payload: Optional[dict] = None

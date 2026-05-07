@@ -160,10 +160,23 @@ def generate_for_engine(
 
     prompt = _build_prompt(context, spec, docs, upstream_outputs)
 
-    # Attempt 1
-    raw = llm.complete_json(prompt=prompt, system=_SYSTEM, timeout=timeout)
-    parsed = _validate(raw)
+    # Attempt 1. Network / SDK / "no_text" failures are caught and treated
+    # the same as a JSON-validation failure: the request must NOT 500 just
+    # because the upstream LLM blipped. The rule-based guardrails downstream
+    # (apple_scab_guardrail, lai_biomass_scab_guardrail) still run and still
+    # produce useful output even when the LLM step fell back.
+    raw = ""
+    raw_retry = ""
     parse_status = "ok"
+    try:
+        raw = llm.complete_json(prompt=prompt, system=_SYSTEM, timeout=timeout)
+        parsed = _validate(raw)
+    except Exception as exc:
+        log.warning(
+            "engine=%s crop=%s llm_attempt_1=exception err=%s",
+            spec.engine_id, context.crop, exc,
+        )
+        parsed = None
 
     # Attempt 2 — retry once with a tighter prompt if validation failed.
     # Mirrors the extractor.py policy so behavior is consistent across the
@@ -173,8 +186,15 @@ def generate_for_engine(
             "engine=%s crop=%s parse_attempt_1=failed retrying",
             spec.engine_id, context.crop,
         )
-        raw_retry = llm.complete_json(prompt=prompt, system=_SYSTEM_RETRY, timeout=timeout)
-        parsed = _validate(raw_retry)
+        try:
+            raw_retry = llm.complete_json(prompt=prompt, system=_SYSTEM_RETRY, timeout=timeout)
+            parsed = _validate(raw_retry)
+        except Exception as exc:
+            log.warning(
+                "engine=%s crop=%s llm_attempt_2=exception err=%s",
+                spec.engine_id, context.crop, exc,
+            )
+            parsed = None
         if parsed is None:
             # Soft fallback: surface a generic summary plus the raw text in
             # details so the caller still gets something AND can see what the

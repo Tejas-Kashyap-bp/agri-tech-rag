@@ -113,7 +113,20 @@ def _cache_get(key: str) -> Optional[dict]:
         age_h = (time.time() - fp.stat().st_mtime) / 3600.0
         if age_h > _CACHE_TTL_HOURS:
             return None
-        return json.loads(fp.read_text())
+        payload = json.loads(fp.read_text())
+        # Backfill lai_current for cache files written before the LAI field
+        # existed (Beer–Lambert from NDVI). Avoids waiting 24h for the cache
+        # to expire after a deploy that added LAI.
+        if isinstance(payload, dict) and payload.get("lai_current") is None:
+            ndvi = payload.get("ndvi_current")
+            try:
+                if isinstance(ndvi, (int, float)) and 0.0 < float(ndvi) < 1.0:
+                    payload["lai_current"] = round(
+                        -math.log(1.0 - float(ndvi)) / 0.5, 2
+                    )
+            except (ValueError, ZeroDivisionError):
+                pass
+        return payload
     except Exception:
         return None
 
@@ -293,11 +306,23 @@ def get_satellite_data(
     token = _get_cached_token()
     feats = get_satellite_features(token, polygon, sowing_iso)
 
+    # Derive LAI from NDVI via Beer–Lambert: LAI ≈ -ln(1 - NDVI) / k, k≈0.5.
+    # E4.1 (pest-risk / apple-scab guardrail) reads LAI directly — no NDVI
+    # proxy needed downstream. NDVI / NDRE / EVI remain for E3 + E5.
+    ndvi_cur = feats.get("ndvi_current")
+    lai_cur: Optional[float] = None
+    try:
+        if isinstance(ndvi_cur, (int, float)) and 0.0 < float(ndvi_cur) < 1.0:
+            lai_cur = round(-math.log(1.0 - float(ndvi_cur)) / 0.5, 2)
+    except (ValueError, ZeroDivisionError):
+        lai_cur = None
+
     payload = {
         "ndvi_current":  feats.get("ndvi_current"),
         "ndvi_delta_7d": feats.get("ndvi_delta_7d") or 0.0,
         "ndre_current":  feats.get("ndre_current"),
         "evi_current":   feats.get("evi_current"),
+        "lai_current":   lai_cur,
         "source":        "sentinel-hub",
     }
     _cache_put(key, payload)
