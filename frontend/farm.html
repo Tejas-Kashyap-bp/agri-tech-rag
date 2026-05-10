@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BluParrot Agri — Apple Farm Advisory</title>
+<style>
+  :root {
+    --green:#2f7a3d; --green-dark:#1f5a2b; --green-soft:#e8f3eb;
+    --bg:#f5f7f4; --card:#fff; --text:#1f2a1c; --muted:#5a6a5a;
+    --line:#dde5db; --warn:#b04a00; --err:#a8261b;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+         background:var(--bg); color:var(--text); }
+  header { background:var(--green); color:#fff; padding:18px 24px; }
+  header h1 { margin:0; font-size:20px; font-weight:600; }
+  header .sub { font-size:13px; opacity:.85; margin-top:2px; }
+  main { max-width:820px; margin:0 auto; padding:20px 16px 60px; }
+
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:10px;
+           padding:18px; margin-bottom:16px; }
+  .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+  label { font-size:13px; color:var(--muted); display:block; margin-bottom:4px; }
+  input[type=text], input[type=number], input[type=date], select {
+    padding:10px 12px; border:1px solid var(--line); border-radius:8px;
+    font-size:14px; width:240px; background:#fff;
+  }
+  input[type=number] { width:140px; }
+  .panel h3 { margin:0 0 10px; font-size:13px; color:var(--muted);
+              text-transform:uppercase; letter-spacing:.5px; font-weight:600; }
+  .hint { font-size:12px; color:var(--muted); margin-top:4px; }
+  button { padding:10px 18px; background:var(--green); color:#fff; border:0;
+           border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; }
+  button:hover { background:var(--green-dark); }
+  button:disabled { background:#9ab39e; cursor:not-allowed; }
+
+  .status { font-size:13px; color:var(--muted); margin-left:8px; }
+  .err { color:var(--err); font-size:13px; }
+
+  .main-card {
+    background:var(--green-soft); border:1px solid var(--green);
+    border-radius:10px; padding:20px; margin-bottom:16px;
+  }
+  .main-card h2 { margin:0 0 8px; font-size:15px; color:var(--green-dark);
+                  text-transform:uppercase; letter-spacing:.5px; }
+  .main-card p { margin:0; font-size:16px; line-height:1.55; }
+
+  .engine-card { background:var(--card); border:1px solid var(--line);
+                 border-radius:10px; margin-bottom:10px; overflow:hidden; }
+  .engine-card summary {
+    list-style:none; cursor:pointer; padding:14px 18px;
+    display:flex; justify-content:space-between; align-items:center;
+    font-weight:600; font-size:15px;
+  }
+  .engine-card summary::-webkit-details-marker { display:none; }
+  .engine-card summary:hover { background:#fafaf7; }
+  .engine-card .icon { font-size:20px; margin-right:10px; }
+  .engine-card .arrow { color:var(--muted); font-size:14px; }
+  .engine-card[open] .arrow::before { content:"▼"; }
+  .engine-card:not([open]) .arrow::before { content:"▶"; }
+  .engine-body { padding:0 18px 16px; border-top:1px solid var(--line); }
+  .engine-body p { font-size:15px; line-height:1.5; margin:14px 0 6px; }
+  .engine-body .raw {
+    margin-top:10px; background:#f5f5f1; border:1px solid var(--line);
+    border-radius:6px; padding:10px; font-size:11px;
+    font-family:ui-monospace,Menlo,monospace; max-height:240px; overflow:auto;
+    white-space:pre-wrap;
+  }
+  .engine-body .raw-toggle { font-size:12px; color:var(--muted); cursor:pointer;
+                              user-select:none; margin-top:8px; }
+  .skipped { color:var(--warn); font-style:italic; font-size:14px; }
+  .meta { font-size:12px; color:var(--muted); margin-bottom:14px; }
+  .meta b { color:var(--text); }
+  .pill { display:inline-block; padding:2px 8px; border-radius:10px;
+          background:var(--green-soft); color:var(--green-dark); font-size:11px;
+          font-weight:600; margin-left:6px; }
+  .pill.warn { background:#fbe9d8; color:var(--warn); }
+  .pill.err  { background:#f8d7d3; color:var(--err); }
+  .pill.gray { background:#eceee9; color:var(--muted); }
+
+  .empty { color:var(--muted); padding:40px; text-align:center; font-size:14px; }
+  .spinner { display:inline-block; width:14px; height:14px; border:2px solid #ddd;
+             border-top-color:var(--green); border-radius:50%; animation:spin 0.8s linear infinite;
+             vertical-align:middle; margin-right:6px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  .links { font-size:12px; color:#fff; opacity:.85; }
+  .links a { color:#fff; text-decoration:underline; margin-right:14px; }
+  .sat-block { margin:10px 0; padding:10px 12px; border-radius:8px;
+    background:#f1f7ee; border:1px solid #cfe2c2; }
+  .sat-head { font-size:11px; letter-spacing:.4px; text-transform:uppercase;
+    color:#2f5d2a; margin-bottom:4px; }
+  .sat-text { margin:4px 0; color:#1a1a1a; }
+  .sat-sub { margin:4px 0; color:#555; font-size:12.5px; }
+  .sat-pills { margin-top:6px; display:flex; flex-wrap:wrap; gap:5px; }
+  .sat-pill { display:inline-block; padding:2px 8px; border-radius:99px;
+    background:#e3efd9; color:#2f5d2a; font-size:11px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Apple Farm Advisory</h1>
+  <div class="links" style="margin-top:8px;">
+    <a href="/">Dev console</a>
+    <a href="/ui">AI advisory page</a>
+    <a href="/docs" target="_blank">Swagger</a>
+  </div>
+</header>
+
+<main>
+  <div class="panel">
+    <h3>Farm</h3>
+    <div class="row">
+      <div>
+        <label for="farm_id_select">Farm ID</label>
+        <select id="farm_id_select">
+          <optgroup label="Demo farms">
+            <option value="APPLE_DEMO_003">APPLE_DEMO_003 — Royal Delicious · Baramulla J&amp;K · drip</option>
+            <option value="APPLE_DEMO_001">APPLE_DEMO_001 — Royal Delicious · Shimla HP · drip</option>
+            <option value="APPLE_DEMO_002">APPLE_DEMO_002 — Red Delicious · Kullu HP · sprinkler</option>
+          </optgroup>
+          <optgroup label="Most apple-scab-prone farms (Kashmir Valley)">
+            <option value="APPLE_DEMO_004">APPLE_DEMO_004 — Royal Delicious · Shopian J&amp;K · drip</option>
+            <option value="APPLE_DEMO_005">APPLE_DEMO_005 — Red Delicious · Shopian J&amp;K · sprinkler</option>
+            <option value="APPLE_DEMO_006">APPLE_DEMO_006 — Gala (high-density) · Shopian J&amp;K · drip</option>
+            <option value="APPLE_DEMO_007">APPLE_DEMO_007 — Ambri (heritage) · Shopian J&amp;K · rainfed</option>
+            <option value="APPLE_DEMO_008">APPLE_DEMO_008 — Royal Delicious · Pulwama J&amp;K · drip</option>
+            <option value="APPLE_DEMO_009">APPLE_DEMO_009 — Golden Delicious · Pulwama J&amp;K · flood</option>
+            <option value="APPLE_DEMO_010">APPLE_DEMO_010 — Gala (high-density) · Pulwama J&amp;K · drip</option>
+            <option value="APPLE_DEMO_011">APPLE_DEMO_011 — Red Delicious · Pulwama J&amp;K · sprinkler</option>
+            <option value="APPLE_DEMO_012">APPLE_DEMO_012 — Royal Delicious · Imamsahib (Shopian) J&amp;K · drip</option>
+            <option value="APPLE_DEMO_013">APPLE_DEMO_013 — Maharaji · Imamsahib (Shopian) J&amp;K · sprinkler</option>
+            <option value="APPLE_DEMO_014">APPLE_DEMO_014 — Gala (high-density) · Imamsahib (Shopian) J&amp;K · drip</option>
+            <option value="APPLE_DEMO_015">APPLE_DEMO_015 — Ambri (heritage) · Imamsahib (Shopian) J&amp;K · rainfed</option>
+          </optgroup>
+          <option value="__custom__">Custom…</option>
+        </select>
+      </div>
+      <div id="farm_id_custom_wrap" style="display:none">
+        <label for="farm_id_custom">Custom farm ID</label>
+        <input id="farm_id_custom" type="text" placeholder="e.g. APPLE_DEMO_999" />
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="row">
+      <button id="go">Get advisory</button>
+      <span id="status" class="status"></span>
+    </div>
+    <div id="err" class="err"></div>
+  </div>
+
+  <div id="results"></div>
+  <div id="empty" class="empty">Pick a farm and click "Get advisory" to see the per-engine output.</div>
+</main>
+
+<script>
+// Output-key → label/icon map. Mirrors the apple engine layout in
+// app/advisory/orchestrator.py: e2 removed; e4 split into 4.1 (risk) and
+// 4.2 (cure). 4.2 runs after 4.1 because it consumes triggered_organisms.
+const ENGINE_META = {
+  stage:             { icon:"🌱", label:"Crop stage",                       eid:"e1_stage" },
+  fertilizer:        { icon:"🧪", label:"Fertilizer (INM)",                 eid:"e3_nutrition" },
+  pest_disease_risk: { icon:"🐛", label:"Pest & Disease Risk Forecast", eid:"e4_pest_disease_risk" },
+  pest_disease_cure: { icon:"💊", label:"Pest & Disease — Spray Schedule",        eid:"e4_2_pest_disease_cure" },
+  yield:             { icon:"🌾", label:"Yield & Harvest",                  eid:"e5_yield" },
+};
+const ENGINE_ORDER = ["stage","fertilizer","pest_disease_risk","pest_disease_cure","yield"];
+
+const $   = (id) => document.getElementById(id);
+
+// Coerce any LLM-returned value to a human-readable string before HTML
+// escaping. Without this, an object/array slot renders as "[object Object]"
+// via the default String() coercion. Defined BEFORE esc so esc can use it.
+const flattenStr = (v) => {
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  if (typeof v === "number" || typeof v === "boolean") return String(v);
+  if (Array.isArray(v)) {
+    return v.map(flattenStr).filter(Boolean).join(", ");
+  }
+  if (typeof v === "object") {
+    for (const k of ["text","label","name","summary","message","value","action"]) {
+      if (v[k] != null) return flattenStr(v[k]);
+    }
+    return Object.entries(v)
+      .map(([k, val]) => `${k}: ${flattenStr(val)}`)
+      .join(", ");
+  }
+  return String(v);
+};
+
+const esc = (s) => flattenStr(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+const API_BASE = (typeof window !== "undefined" && window.API_BASE) ? window.API_BASE : "";
+
+function resolveFarmId() {
+  const sel = $("farm_id_select").value;
+  return sel === "__custom__" ? $("farm_id_custom").value.trim() : sel;
+}
+
+async function run() {
+  const farm_id = resolveFarmId();
+  if (!farm_id) { $("err").textContent = "Please enter a farm ID"; return; }
+
+  const body = { farm_id };
+
+  $("err").textContent = "";
+  $("go").disabled = true;
+  $("empty").style.display = "none";
+  $("results").innerHTML = "";
+  $("status").innerHTML = '<span class="spinner"></span>Generating advisory…';
+
+  const t0 = performance.now();
+  let resp, data;
+  try {
+    resp = await fetch(`${API_BASE}/farm-advisory`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    data = await resp.json();
+  } catch (e) {
+    $("err").textContent = "Network error: " + e.message;
+    $("go").disabled = false; $("status").textContent = "";
+    return;
+  }
+  const dt = ((performance.now() - t0) / 1000).toFixed(1);
+  $("go").disabled = false;
+  $("status").textContent = `Done in ${dt}s`;
+
+  if (!resp.ok) {
+    $("err").textContent = (data && (data.detail || data.message)) || `HTTP ${resp.status}`;
+    return;
+  }
+  render(data);
+}
+
+function statusPill(slot) {
+  if (!slot) return `<span class="pill gray">—</span>`;
+  if (slot.status === "error") return `<span class="pill err">error</span>`;
+  if (slot.parse_status === "fallback") return `<span class="pill warn">fallback</span>`;
+  return `<span class="pill">ok</span>`;
+}
+
+function renderSatelliteBlock(slot) {
+  // Field-team feedback: the fertilizer card must NOT show a separate
+  // "🛰 satellite advisory" panel. The satellite-driven recommendation is
+  // already merged into the main fertilizer summary by the orchestrator
+  // (_decorate_with_satellite_advisory in app/advisory/orchestrator.py),
+  // and farmer-facing copy must never mention NDVI / NDRE / EVI.
+  return "";
+}
+
+function renderScheduleRow(row) {
+  const material = esc(row.material || row.action || "(action)");
+  const qty      = esc(row.computed_qty || row.quantity || "as directed");
+  const targetStr = Array.isArray(row.targets) ? row.targets : (row.targets ? [row.targets] : []);
+  const targets  = targetStr.length ? `Targets: ${esc(targetStr)}` : "";
+  const basis    = row.per_100l_or_per_acre_basis ? esc(row.per_100l_or_per_acre_basis) : "";
+  return `<li>
+    <div><b>${material}</b> — ${qty}</div>
+    ${targets ? `<div class="hint">${targets}</div>` : ""}
+    ${basis ? `<div class="hint">${basis}</div>` : ""}
+  </li>`;
+}
+
+function renderCureBody(slot) {
+  const d = slot.details || {};
+  const organic = d.organic_recommendations || [];
+  const chemical = d.chemical_recommendations || [];
+  if (!organic.length && !chemical.length) {
+    return d.reasoning ? `<p class="hint">${esc(d.reasoning)}</p>` : "";
+  }
+  let html = "";
+  if (chemical.length) {
+    html += `<h4 style="margin:10px 0 6px">Chemical schedule</h4>
+      <ol>${chemical.map(renderScheduleRow).join("")}</ol>`;
+  }
+  if (organic.length) {
+    html += `<h4 style="margin:10px 0 6px">Organic schedule</h4>
+      <ol>${organic.map(renderScheduleRow).join("")}</ol>`;
+  }
+  return html;
+}
+
+function renderYieldBlock(slot) {
+  // Farmer-facing yield block. Per-tree first, then scaled to the whole
+  // orchard. No NDVI / NDRE / EVI numbers or labels — field team requirement.
+  if (!slot) return "";
+  const basePerTree  = slot.base_yield_kg_per_tree  ?? slot.base_yield_kg_per_acre;
+  const finalPerTree = slot.final_yield_kg_per_tree ?? slot.final_yield_kg_per_acre;
+  const numTrees     = slot.number_of_trees;
+  const total        = slot.total_yield_kg;
+  const advisory     = slot.satellite_advisory;
+  if (basePerTree == null && finalPerTree == null && !advisory) return "";
+
+  let lines = "";
+  if (basePerTree != null) {
+    lines += `<li>Expected yield per tree (before any field-condition adjustment): about <b>${esc(basePerTree)} kg</b>.</li>`;
+  }
+  if (advisory) {
+    lines += `<li>${esc(advisory)}</li>`;
+  }
+  if (finalPerTree != null) {
+    // Subtle hint that a field-health adjustment is in play. We deliberately
+    // do NOT name NDVI / NDRE / EVI or call it satellite-derived — but the
+    // sign + magnitude of the nudge is shown so the operator can see the
+    // calculation moved from the base figure.
+    const adj = slot.adjustment_percent;
+    const adjHint = (adj != null && adj !== 0)
+      ? ` (a ${adj > 0 ? "+" : ""}${esc(adj)}% field-health adjustment over the base figure)`
+      : "";
+    lines += `<li>After accounting for the recent field condition, expected yield per tree is about <b>${esc(finalPerTree)} kg</b>${adjHint}.</li>`;
+  }
+  if (numTrees != null && total != null) {
+    lines += `<li>For your <b>${esc(numTrees)} trees</b>, the total expected yield is about <b>${esc(total)} kg</b>.</li>`;
+  }
+
+  return `<div class="sat-block">
+    <div class="sat-head">🌾 yield estimate</div>
+    <ul style="margin:6px 0 0;padding-left:18px;line-height:1.55">${lines}</ul>
+  </div>`;
+}
+
+function renderEngineCard(key, slot) {
+  const meta = ENGINE_META[key];
+
+  let body;
+  if (!slot) {
+    body = `<div class="engine-body"><p class="skipped">No output returned.</p></div>`;
+  } else if (slot.status === "error") {
+    body = `<div class="engine-body">
+      <p class="skipped">⚠ ${esc(slot.summary || (slot.error && slot.error.message) || "engine failed")}</p>
+      <pre class="raw" style="display:block">${esc(JSON.stringify(slot.error || slot, null, 2))}</pre>
+    </div>`;
+  } else {
+    const sources = (slot.source_docs || [])
+      .map(s => `<span class="pill gray">${esc(s.doc_key)}${s.version != null ? ' v' + s.version : ''}</span>`)
+      .join(" ");
+    const satBlock = (key === "fertilizer") ? renderSatelliteBlock(slot) : "";
+    const cureBlock = (key === "pest_disease_cure") ? renderCureBody(slot) : "";
+    const yieldBlock = (key === "yield") ? renderYieldBlock(slot) : "";
+    body = `<div class="engine-body">
+      <p>${esc(slot.summary || "(no summary)")}</p>
+      ${satBlock}
+      ${cureBlock}
+      ${yieldBlock}
+      ${sources ? `<div class="hint">📚 ${sources}</div>` : ""}
+      <div class="raw-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'">▸ show raw engine output</div>
+      <pre class="raw" style="display:none">${esc(JSON.stringify(slot, null, 2))}</pre>
+    </div>`;
+  }
+
+  return `<details class="engine-card">
+    <summary>
+      <span><span class="icon">${meta.icon}</span>${meta.label}${statusPill(slot)}</span>
+      <span class="arrow"></span>
+    </summary>
+    ${body}
+  </details>`;
+}
+
+function render(data) {
+  const ctx = data.context || {};
+  let html = `<div class="panel meta">
+    <b>Request:</b> ${esc(data.request_id || "—")} &nbsp;·&nbsp;
+    <b>Crop:</b> ${esc(ctx.crop)} &nbsp;·&nbsp;
+    <b>Sown:</b> ${esc(ctx.sowing_date)} &nbsp;·&nbsp;
+    <b>Today:</b> ${esc(ctx.current_date)}
+  </div>`;
+
+  // Quick summary — one tight paragraph stitched from per-engine summaries.
+  // Each engine's .summary is already a short headline; join the first
+  // sentence of each so the whole paragraph stays ~4-5 lines.
+  // Stop at the first sentence terminator that is followed by whitespace or
+  // end-of-string. Critical: do NOT split on a bare "." because numbers like
+  // "9.42 kg per tree" would otherwise be truncated to "about 9" (which a
+  // farmer would read as "9 apples", not "9 kilograms").
+  const firstSentence = (s) => {
+    const str = String(s || "").trim();
+    const m = str.match(/^.+?[.!?](?=\s|$)/);
+    return (m ? m[0] : str).trim();
+  };
+  const parts = [];
+  for (const key of ENGINE_ORDER) {
+    const slot = data[key];
+    if (!slot || slot.status === "error" || !slot.summary) continue;
+    const frag = firstSentence(slot.summary);
+    if (frag) parts.push(frag.replace(/[.!?]$/, "") + ".");
+  }
+  const para = parts.join(" ");
+  html += `<div class="main-card">
+    <h2>Quick summary</h2>
+    <p>${para ? esc(para) : '<span class="skipped">No headline insight.</span>'}</p>
+  </div>`;
+
+  for (const key of ENGINE_ORDER) html += renderEngineCard(key, data[key]);
+
+  $("results").innerHTML = html;
+}
+
+$("go").addEventListener("click", run);
+$("farm_id_select").addEventListener("change", () => {
+  $("farm_id_custom_wrap").style.display =
+    $("farm_id_select").value === "__custom__" ? "" : "none";
+});
+$("farm_id_custom").addEventListener("keydown", (e) => { if (e.key === "Enter") run(); });
+</script>
+</body>
+</html>

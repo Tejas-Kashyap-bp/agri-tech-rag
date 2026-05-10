@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AGRI-RAG Dev Console</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #1a1a2e;
+      color: white;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 { font-size: 17px; font-weight: 600; }
+    header a { color: #7ecfff; text-decoration: none; font-size: 13px; }
+    header a:hover { text-decoration: underline; }
+    header .meta { font-size: 13px; opacity: 0.6; }
+
+    /* Tab bar */
+    .tabs {
+      background: #fff;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      padding: 0 32px;
+    }
+    .tab {
+      padding: 14px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      color: #666;
+      transition: color 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+    .tab.active { color: #1967d2; border-bottom-color: #1967d2; font-weight: 600; }
+    .tab:hover:not(.active) { color: #333; }
+
+    /* Pages */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    main {
+      max-width: 900px;
+      margin: 28px auto;
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 22px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .card h2 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      background: #e8f0fe;
+      color: #1967d2;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-weight: 500;
+    }
+    .badge.green { background: #e6f4ea; color: #0f5132; }
+    .badge.red   { background: #fce8e8; color: #7b0000; }
+    .badge.gray  { background: #f1f3f4; color: #555; }
+
+    /* Drop zone */
+    .drop-zone {
+      border: 2px dashed #ccd5e0;
+      border-radius: 8px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      color: #666;
+      font-size: 14px;
+    }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: #4285f4; background: #f0f6ff; }
+    .drop-zone input { display: none; }
+    .drop-zone .icon { font-size: 28px; margin-bottom: 6px; }
+    .drop-zone .hint { font-size: 12px; color: #999; margin-top: 4px; }
+    .file-chosen {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #333;
+      background: #f5f5f5;
+      border-radius: 6px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .file-chosen .remove { margin-left: auto; cursor: pointer; color: #999; }
+
+    /* Buttons */
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 9px 18px;
+      transition: opacity 0.15s;
+    }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    button:hover:not(:disabled) { opacity: 0.85; }
+    .btn-primary { background: #1967d2; color: white; }
+    .btn-success { background: #0f9d58; color: white; }
+    .btn-danger  { background: #d32f2f; color: white; }
+    .btn-neutral { background: #e0e0e0; color: #333; }
+    .btn-row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+
+    /* Status banners */
+    .status-banner {
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .banner-stored  { background: #e6f4ea; color: #0f5132; }
+    .banner-pending { background: #fff3cd; color: #664d03; }
+    .banner-error   { background: #fce8e8; color: #7b0000; }
+    .banner-stopped { background: #f1f3f4; color: #555; }
+
+    .detail-block {
+      background: #f8f9fa;
+      border-radius: 6px;
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .detail-block .label {
+      color: #888;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      display: block;
+      margin-top: 8px;
+      margin-bottom: 1px;
+    }
+    .detail-block .label:first-child { margin-top: 0; }
+    .detail-block .value { color: #1a1a2e; font-weight: 500; }
+    .detail-block .reason { font-style: italic; color: #555; }
+    .confidence-bar { height: 5px; background: #e0e0e0; border-radius: 3px; margin-top: 5px; }
+    .confidence-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+
+    .error-block { border-left: 3px solid #d32f2f; padding-left: 12px; margin-top: 10px; }
+    .error-block .err-label { font-size: 11px; color: #d32f2f; text-transform: uppercase; font-weight: 600; letter-spacing: 0.4px; }
+    .error-block .err-field { font-size: 13px; color: #333; margin-top: 3px; }
+    .error-block .err-action { font-size: 13px; color: #555; margin-top: 8px; background: #fff3cd; padding: 6px 10px; border-radius: 4px; }
+
+    .input-row { display: flex; gap: 10px; }
+    .input-row input {
+      flex: 1; border: 1px solid #ddd; border-radius: 6px;
+      padding: 8px 12px; font-size: 13px; outline: none;
+    }
+    .input-row input:focus { border-color: #4285f4; }
+
+    .upload-id-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #f0f4ff; border: 1px solid #c3d4f7;
+      border-radius: 99px; padding: 3px 12px;
+      font-size: 12px; color: #1967d2; margin-top: 10px; cursor: pointer;
+    }
+    .upload-id-pill:hover { background: #e4eeff; }
+
+    .spinner {
+      display: inline-block; width: 15px; height: 15px;
+      border: 2px solid rgba(0,0,0,0.1); border-top-color: #1967d2;
+      border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-row { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #666; padding: 10px 0; }
+
+    /* ── Crop Coverage ─────────────────────────────────────────── */
+    .coverage-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+    }
+    .coverage-header h3 { font-size: 15px; font-weight: 600; }
+    .completeness-ring {
+      display: flex; flex-direction: column; align-items: center;
+      font-size: 13px; color: #555;
+    }
+    .ring-number {
+      font-size: 28px; font-weight: 700; line-height: 1;
+    }
+    .ring-number.full  { color: #0f9d58; }
+    .ring-number.half  { color: #fbbc04; }
+    .ring-number.low   { color: #d32f2f; }
+
+    .coverage-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;
+    }
+    @media (max-width: 600px) { .coverage-grid { grid-template-columns: 1fr; } }
+
+    .coverage-card {
+      border-radius: 8px; padding: 14px; border: 1px solid #e0e0e0;
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .coverage-card.present { border-color: #c8e6c9; background: #f1f8f1; }
+    .coverage-card.missing { border-color: #ffd0d0; background: #fff5f5; }
+
+    .cov-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .cov-label { font-size: 13px; font-weight: 600; color: #333; }
+    .cov-desc  { font-size: 11px; color: #777; margin-top: 3px; line-height: 1.5; }
+    .cov-meta  { font-size: 11px; color: #0f9d58; margin-top: 4px; font-weight: 500; }
+    .cov-missing-label { font-size: 11px; color: #c62828; margin-top: 4px; }
+
+    /* Grouped section with multiple children (e.g. Pest & Disease Advisory) */
+    .cov-children {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px dashed #d6d6d6;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .cov-child-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px;
+    }
+    .cov-child-row .cov-child-icon { flex-shrink: 0; }
+    .cov-child-row .cov-child-label { color: #444; font-weight: 500; }
+    .cov-child-row .cov-child-meta  { color: #0f9d58; font-size: 11px; }
+    .cov-child-row.missing .cov-child-label { color: #888; }
+    .cov-child-row.missing .cov-child-meta  { color: #c62828; }
+
+    .extra-knowledge-section { margin-top: 8px; }
+    .ek-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 10px; }
+    .ek-item {
+      border: 1px solid #e8eaf6; border-radius: 7px; padding: 12px;
+      margin-bottom: 8px; background: #f5f5ff; font-size: 13px;
+    }
+    .ek-item .ek-key { font-weight: 600; color: #3949ab; }
+    .ek-item .ek-desc { color: #555; margin-top: 3px; font-size: 12px; }
+
+    /* ── DB Browser ────────────────────────────────────────────── */
+    .db-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .db-toolbar input {
+      border: 1px solid #ddd; border-radius: 6px;
+      padding: 7px 12px; font-size: 13px; outline: none; width: 240px;
+    }
+    .db-toolbar input:focus { border-color: #4285f4; }
+    .db-stats { font-size: 13px; color: #666; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      text-align: left; padding: 9px 12px;
+      background: #f8f9fa; color: #555;
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafbff; }
+
+    .pill {
+      display: inline-block; border-radius: 99px; padding: 2px 9px;
+      font-size: 11px; font-weight: 500; white-space: nowrap;
+    }
+    .pill-active   { background: #e6f4ea; color: #0f5132; }
+    .pill-inactive { background: #f1f3f4; color: #777; }
+    .pill-engine   { background: #e8f0fe; color: #1967d2; }
+    .pill-type     { background: #fce8ff; color: #6a0dad; }
+
+    .doc-key { font-weight: 600; color: #1a1a2e; }
+    .text-preview { color: #888; font-size: 11px; margin-top: 3px; line-height: 1.5; max-width: 300px; }
+
+    .expand-btn {
+      background: none; border: none; padding: 0;
+      color: #1967d2; font-size: 12px; cursor: pointer; text-decoration: underline;
+    }
+
+    .detail-panel {
+      background: #f8f9fa; border-radius: 8px;
+      padding: 16px; margin-top: 10px;
+      font-size: 12px; line-height: 1.7;
+    }
+    .detail-panel pre {
+      white-space: pre-wrap; word-break: break-word;
+      color: #333; font-family: "SF Mono", "Fira Code", monospace;
+    }
+
+    .empty-state { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
+
+    .docs-link { text-align: center; font-size: 12px; color: #aaa; }
+    .docs-link a { color: #1967d2; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🌱 AGRI-RAG Dev Console</h1>
+  <div style="display:flex;align-items:center;gap:20px;">
+    <span class="meta">API: <strong>localhost:8000</strong></span>
+    <a href="http://localhost:8000/docs" target="_blank">Swagger UI →</a>
+  </div>
+</header>
+
+<!-- Tab bar -->
+<div class="tabs">
+  <div class="tab active" data-tab="upload">📤 Upload</div>
+  <div class="tab" data-tab="coverage">📊 Crop Coverage</div>
+  <div class="tab" data-tab="db">🗄️ DB Browser</div>
+  <div class="tab" data-tab="status">🔍 Status Check</div>
+  <div class="tab" data-tab="advisory">🧪 Advisory Tester</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- TAB 1 — Upload                                             -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="page active" id="page-upload">
+<main>
+
+  <div class="card">
+    <h2>Upload Document <span class="badge">PDF · JSON · CSV</span></h2>
+    <div class="drop-zone" id="dropZone">
+      <div class="icon">📄</div>
+      <div>Click to choose a file, or drag & drop here</div>
+      <div class="hint">.pdf · .json · .csv</div>
+      <input type="file" id="fileInput" accept=".pdf,.json,.csv" />
+    </div>
+    <div class="file-chosen" id="fileChosen" style="display:none">
+      <span>📎</span><span id="fileName"></span>
+      <span class="remove" id="removeFile">✕</span>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" id="uploadBtn" disabled>Upload & Run Pipeline</button>
+    </div>
+  </div>
+
+  <div class="card" id="resultCard" style="display:none">
+    <h2 id="resultTitle">Pipeline Result</h2>
+    <div id="resultBody"></div>
+    <div class="btn-row" id="actionButtons"></div>
+  </div>
+
+  <div class="docs-link">
+    <a href="http://localhost:8000/docs" target="_blank">Open Swagger UI for raw endpoint testing →</a>
+  </div>
+
+</main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- TAB 2 — Crop Coverage                                      -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="page" id="page-coverage">
+<main>
+
+  <div class="card">
+    <h2>Crop Data Coverage</h2>
+    <div class="input-row" style="margin-bottom:8px;">
+      <select id="cropSelect" style="flex:1;border:1px solid #ddd;border-radius:6px;padding:8px 12px;font-size:13px;outline:none;background:white;">
+        <option value="">Select a crop…</option>
+      </select>
+      <input type="text" id="cropCustom" placeholder="or type a crop name" style="flex:1;border:1px solid #ddd;border-radius:6px;padding:8px 12px;font-size:13px;outline:none;" />
+      <button class="btn-primary" id="coverageBtn">Check</button>
+    </div>
+    <div style="font-size:12px;color:#aaa;">Select from dropdown (crops already in DB) or type any crop name</div>
+  </div>
+
+  <div class="card" id="coverageResult" style="display:none">
+    <div id="coverageBody"></div>
+  </div>
+
+</main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- TAB 3 — DB Browser                                         -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="page" id="page-db">
+<main>
+
+  <div class="card">
+    <h2>Vector DB Contents <span class="badge" id="docCount">—</span></h2>
+
+    <div class="db-toolbar">
+      <input type="text" id="dbSearch" placeholder="Filter by doc_key, crop, engine, type…" />
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="db-stats" id="dbStats"></span>
+        <button class="btn-neutral" id="refreshBtn">↻ Refresh</button>
+        <button class="btn-danger" id="clearAllBtn" style="font-size:12px;padding:5px 10px">🗑 Clear All</button>
+      </div>
+    </div>
+
+    <div id="dbTable">
+      <div class="empty-state">Click Refresh to load documents</div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- TAB 3 — Status Check                                       -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="page" id="page-status">
+<main>
+
+  <div class="card">
+    <h2>Check Upload Status</h2>
+    <div class="input-row">
+      <input type="text" id="statusInput" placeholder="Paste upload_id…" />
+      <button class="btn-neutral" id="statusBtn">Check</button>
+    </div>
+    <div id="statusResult" style="margin-top:12px;font-size:13px;color:#555;"></div>
+  </div>
+
+</main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- TAB 5 — Advisory Tester                                    -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="page" id="page-advisory">
+<main>
+
+  <div class="card">
+    <h2>Advisory Tester <span class="badge">POST /advisory</span></h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+      <div>
+        <label style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.4px;">Crop</label>
+        <input type="text" id="advCrop" placeholder="e.g. apple" value="apple" style="width:100%;border:1px solid #ddd;border-radius:6px;padding:8px 12px;font-size:13px;outline:none;margin-top:4px;" />
+      </div>
+      <div>
+        <label style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.4px;">k (docs per engine)</label>
+        <input type="number" id="advK" value="3" min="1" max="10" style="width:100%;border:1px solid #ddd;border-radius:6px;padding:8px 12px;font-size:13px;outline:none;margin-top:4px;" />
+      </div>
+      <div>
+        <label style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.4px;">Sowing date</label>
+        <input type="date" id="advSowing" style="width:100%;border:1px solid #ddd;border-radius:6px;padding:8px 12px;font-size:13px;outline:none;margin-top:4px;" />
+      </div>
+      <div>
+        <label style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.4px;">Current date</label>
+        <input type="date" id="advCurrent" style="width:100%;border:1px solid #ddd;border-radius:6px;padding:8px 12px;font-size:13px;outline:none;margin-top:4px;" />
+      </div>
+    </div>
+    <details style="margin-top:6px;">
+      <summary style="cursor:pointer;font-size:12px;color:#1967d2;">Optional context (weather / soil / satellite / detection / extra) — JSON</summary>
+      <textarea id="advExtra" rows="6" placeholder='{"weather": {"rainfall_mm": 0}, "soil": {"ph": 6.5}}' style="width:100%;margin-top:8px;border:1px solid #ddd;border-radius:6px;padding:10px;font-family:'SF Mono',monospace;font-size:12px;outline:none;resize:vertical;"></textarea>
+      <div style="font-size:11px;color:#999;margin-top:4px;">Top-level keys are passed as-is alongside crop / sowing_date / current_date.</div>
+    </details>
+    <div class="btn-row" style="gap:8px;">
+      <button class="btn-primary" id="advRunBtn">Run Advisory</button>
+      <button type="button" id="advApplePreset" style="border:1px solid #c7d6ee;background:#eef4ff;color:#1967d2;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">🍎 Apple demo preset (no farm needed)</button>
+    </div>
+    <div style="font-size:11px;color:#888;margin-top:6px;">No apple farm exists in Supabase yet — use the dev advisory above (this tab) to test apple end-to-end against the ingested apple knowledge. The Farm-driven path (<code>/farm-advisory</code>) needs an apple row in <code>farms</code> + <code>crop_seasons</code> in Supabase before it will work.</div>
+  </div>
+
+  <div class="card" id="advResultCard" style="display:none">
+    <h2 id="advResultTitle">Advisory Result</h2>
+    <div id="advRequestMeta" style="font-size:12px;color:#666;margin-bottom:12px;"></div>
+    <div id="advBody"></div>
+  </div>
+
+</main>
+</div>
+
+<script>
+  // Same-origin when served by FastAPI at http://localhost:8000/. Override
+  // via window.API_BASE if hosting the static files separately.
+  const API = (typeof window !== 'undefined' && window.API_BASE) ? window.API_BASE : '';
+
+  // ── Tab switching ──────────────────────────────────────────────────────
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('page-' + tab.dataset.tab).classList.add('active');
+      if (tab.dataset.tab === 'db') loadDB();
+      if (tab.dataset.tab === 'coverage') loadCropList();
+    });
+  });
+
+  // ── File picker ────────────────────────────────────────────────────────
+  let selectedFile = null;
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+
+  dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
+  document.getElementById('removeFile').addEventListener('click', clearFile);
+
+  function setFile(f) {
+    selectedFile = f;
+    document.getElementById('fileName').textContent = f.name;
+    document.getElementById('fileChosen').style.display = 'flex';
+    document.getElementById('uploadBtn').disabled = false;
+  }
+  function clearFile() {
+    selectedFile = null; fileInput.value = '';
+    document.getElementById('fileChosen').style.display = 'none';
+    document.getElementById('uploadBtn').disabled = true;
+  }
+
+  // ── Upload ─────────────────────────────────────────────────────────────
+  document.getElementById('uploadBtn').addEventListener('click', async () => {
+    if (!selectedFile) return;
+    setLoading('Running pipeline…');
+    const form = new FormData();
+    form.append('file', selectedFile);
+    try {
+      const res = await fetch(`${API}/upload`, { method: 'POST', body: form });
+      handleResponse(await res.json());
+    } catch (err) {
+      showError({ block: 'Upload Route', reason: err.message, action_required: 'Make sure the server is running on port 8001' });
+    }
+  });
+
+  // ── Response routing ───────────────────────────────────────────────────
+  function handleResponse(data) {
+    if (data.error) { showError(data); return; }
+    switch (data.status) {
+      case 'stored':                 showStored(data);          break;
+      case 'pending_classification':  showPendingClassify(data);  break;
+      case 'pending_version':         showPendingVersion(data);   break;
+      case 'pending_evidence_review': showPendingEvidence(data);  break;
+      case 'stopped': case 'rejected': showStopped(data);       break;
+      default: showRaw(data);
+    }
+  }
+
+  function showStored(data) {
+    show('✅ Stored', `
+      <div class="status-banner banner-stored">✅ Document stored in vector DB</div>
+      <div class="detail-block">
+        <span class="label">Doc Key</span><span class="value">${data.doc_key}</span>
+        <span class="label">Version</span><span class="value">v${data.version}</span>
+        <span class="label">Upload ID</span><span class="value">${data.upload_id}</span>
+      </div>
+      <div class="upload-id-pill" onclick="copyId('${data.upload_id}')">🔑 ${data.upload_id} ⎘</div>
+    `);
+  }
+
+  function showPendingClassify(data) {
+    const c = data.predicted;
+    const pct = Math.round(c.confidence * 100);
+    const color = pct >= 90 ? '#34a853' : pct >= 70 ? '#fbbc04' : '#ea4335';
+    show('🤔 Classification Confirmation', `
+      <div class="status-banner banner-pending">LLM classified this document — please review and confirm</div>
+      <div class="detail-block">
+        <span class="label">Engine</span><span class="value">${c.engine}</span>
+        <span class="label">Crop</span><span class="value">${c.crop}</span>
+        <span class="label">Doc Type</span><span class="value">${c.doc_type}</span>
+        <span class="label">Confidence</span><span class="value">${pct}%</span>
+        <div class="confidence-bar"><div class="confidence-fill" style="width:${pct}%;background:${color}"></div></div>
+        <span class="label">LLM Reason</span><span class="reason">${c.reason}</span>
+      </div>
+      <div class="upload-id-pill" onclick="copyId('${data.upload_id}')">🔑 ${data.upload_id} ⎘</div>
+    `, `
+      <button class="btn-success" onclick="confirmClassify('${data.upload_id}','approve')">✓ Approve</button>
+      <button class="btn-danger"  onclick="confirmClassify('${data.upload_id}','reject')">✕ Reject</button>
+    `);
+  }
+
+  function showPendingVersion(data) {
+    show('⚠️ Version Conflict', `
+      <div class="status-banner banner-pending">A document with the same key already exists</div>
+      <div class="detail-block">
+        <span class="label">Doc Key</span><span class="value">${data.doc_key}</span>
+        <span class="label">Existing Version</span><span class="value">v${data.existing_version} (active)</span>
+        <span class="label">Message</span><span class="reason">${data.message}</span>
+      </div>
+      <div class="upload-id-pill" onclick="copyId('${data.upload_id}')">🔑 ${data.upload_id} ⎘</div>
+    `, `
+      <button class="btn-success" onclick="confirmVersion('${data.upload_id}','replace')">↑ Replace (create v${data.existing_version + 1})</button>
+      <button class="btn-neutral" onclick="confirmVersion('${data.upload_id}','reject')">✕ Reject</button>
+    `);
+  }
+
+  function showPendingEvidence(data) {
+    const fieldList = data.flagged_fields.map(f =>
+      `<li style="font-family:monospace;font-size:13px;margin:3px 0">${f}</li>`
+    ).join('');
+    show('🔍 Evidence Review Required', `
+      <div class="status-banner banner-pending">LLM inferred ${data.flagged_fields.length} field(s) without direct source evidence</div>
+      <div class="detail-block">
+        <span class="label">Doc Key</span><span class="value">${data.doc_key}</span>
+        <span class="label">Flagged Fields</span>
+        <ul style="margin:6px 0 0 16px;padding:0">${fieldList}</ul>
+        <span class="reason" style="margin-top:8px;display:block">${data.message}</span>
+      </div>
+      <div class="upload-id-pill" onclick="copyId('${data.upload_id}')">🔑 ${data.upload_id} ⎘</div>
+    `, `
+      <button class="btn-success" onclick="confirmEvidence('${data.upload_id}','approve')">✓ Approve & Proceed</button>
+      <button class="btn-danger"  onclick="confirmEvidence('${data.upload_id}','reject')">✕ Reject</button>
+    `);
+  }
+
+  function showStopped(data) {
+    show('Pipeline Result', `<div class="status-banner banner-stopped">⛔ Pipeline ${data.status} — no changes made</div>`);
+  }
+
+  function showError(data) {
+    show('❌ Pipeline Error', `
+      <div class="status-banner banner-error">Error in block: <strong>${data.block}</strong></div>
+      <div class="error-block">
+        <div class="err-label">Reason</div>
+        <div class="err-field">${data.reason}</div>
+        ${data.detail ? `<div class="err-label">Detail</div><div class="err-field">${data.detail}</div>` : ''}
+        <div class="err-action">👉 ${data.action_required}</div>
+      </div>
+    `);
+  }
+
+  function showRaw(data) {
+    show('Response', `<pre style="font-size:12px;overflow:auto">${JSON.stringify(data,null,2)}</pre>`);
+  }
+
+  function show(title, bodyHtml, btns = '') {
+    document.getElementById('resultCard').style.display = 'block';
+    document.getElementById('resultTitle').textContent = title;
+    document.getElementById('resultBody').innerHTML = bodyHtml;
+    document.getElementById('actionButtons').innerHTML = btns;
+  }
+
+  function setLoading(msg) {
+    show('Running…', `<div class="loading-row"><span class="spinner"></span>${msg}</div>`);
+  }
+
+  // ── Confirm actions ────────────────────────────────────────────────────
+  async function confirmClassify(id, decision) {
+    setLoading(decision === 'approve' ? 'Approving…' : 'Rejecting…');
+    try {
+      const res = await fetch(`${API}/confirm/classify/${id}`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ decision }),
+      });
+      handleResponse(await res.json());
+    } catch (err) {
+      showError({ block: 'Confirm Classify', reason: err.message, action_required: 'Retry' });
+    }
+  }
+
+  async function confirmEvidence(id, decision) {
+    setLoading(decision === 'approve' ? 'Approving evidence review…' : 'Rejecting…');
+    try {
+      const res = await fetch(`${API}/confirm/evidence/${id}`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ decision }),
+      });
+      handleResponse(await res.json());
+    } catch (err) {
+      showError({ block: 'Confirm Evidence', reason: err.message, action_required: 'Retry' });
+    }
+  }
+
+  async function confirmVersion(id, decision) {
+    setLoading(decision === 'replace' ? 'Replacing old version…' : 'Rejecting…');
+    try {
+      const res = await fetch(`${API}/confirm/version/${id}`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ decision }),
+      });
+      handleResponse(await res.json());
+    } catch (err) {
+      showError({ block: 'Confirm Version', reason: err.message, action_required: 'Retry' });
+    }
+  }
+
+  // ── Copy upload_id ─────────────────────────────────────────────────────
+  function copyId(id) {
+    navigator.clipboard.writeText(id);
+    document.getElementById('statusInput').value = id;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // Crop Coverage
+  // ═══════════════════════════════════════════════════════════════════════
+
+  async function loadCropList() {
+    try {
+      const res = await fetch(`${API}/crops`);
+      const data = await res.json();
+      const sel = document.getElementById('cropSelect');
+      sel.innerHTML = '<option value="">Select a crop…</option>';
+      (data.crops || []).forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c; opt.textContent = c.charAt(0).toUpperCase() + c.slice(1);
+        sel.appendChild(opt);
+      });
+    } catch (_) {}
+  }
+
+  document.getElementById('coverageBtn').addEventListener('click', async () => {
+    const sel = document.getElementById('cropSelect').value;
+    const custom = document.getElementById('cropCustom').value.trim().toLowerCase();
+    const crop = custom || sel;
+    if (!crop) return;
+
+    const resultCard = document.getElementById('coverageResult');
+    const body = document.getElementById('coverageBody');
+    resultCard.style.display = 'block';
+    body.innerHTML = '<div class="loading-row"><span class="spinner"></span>Loading coverage…</div>';
+
+    try {
+      const res = await fetch(`${API}/crop/${encodeURIComponent(crop)}/coverage`);
+      const data = await res.json();
+      renderCoverage(data);
+    } catch (err) {
+      body.innerHTML = `<div style="color:#d32f2f;font-size:13px;">Error: ${err.message}</div>`;
+    }
+  });
+
+  function renderCoverage(data) {
+    const body = document.getElementById('coverageBody');
+    const pct = data.completeness_pct;
+    const ringClass = pct === 100 ? 'full' : pct >= 50 ? 'half' : 'low';
+    const present = data.required.filter(r => r.status === 'present').length;
+    const total = data.required.length;
+
+    const requiredCards = data.required.map(item => {
+      const children = item.children || [];
+      // Show the children block only for sections with more than one child,
+      // so single-doc sections keep their simple look.
+      const childrenBlock = children.length > 1
+        ? `<div class="cov-children">${children.map(c => {
+             if (c.status === 'present') {
+               return `<div class="cov-child-row present">
+                 <span class="cov-child-icon">✅</span>
+                 <span class="cov-child-label">${c.label}</span>
+                 <span class="cov-child-meta">v${c.version} · ${c.doc_key}</span>
+               </div>`;
+             }
+             return `<div class="cov-child-row missing">
+               <span class="cov-child-icon">❌</span>
+               <span class="cov-child-label">${c.label}</span>
+               <span class="cov-child-meta">Not yet uploaded</span>
+             </div>`;
+           }).join('')}</div>`
+        : '';
+
+      if (item.status === 'present') {
+        // For grouped sections, don't show a single doc_key line — the children
+        // block carries per-child details.
+        const singleMeta = children.length > 1
+          ? ''
+          : `<div class="cov-meta">v${item.version} · ${item.doc_key}</div>
+             <div class="cov-desc">${item.description || ''}</div>`;
+        return `
+          <div class="coverage-card present">
+            <div class="cov-icon">✅</div>
+            <div style="flex:1">
+              <div class="cov-label">${item.label}</div>
+              ${singleMeta}
+              ${childrenBlock}
+            </div>
+          </div>`;
+      }
+      return `
+        <div class="coverage-card missing">
+          <div class="cov-icon">❌</div>
+          <div style="flex:1">
+            <div class="cov-label">${item.label}</div>
+            <div class="cov-missing-label">Not yet uploaded</div>
+            ${childrenBlock}
+          </div>
+        </div>`;
+    }).join('');
+
+    const ekSection = data.extra_knowledge.length
+      ? `<div class="extra-knowledge-section">
+           <div class="ek-title">📚 Extra Crop Knowledge (${data.extra_knowledge.length} doc${data.extra_knowledge.length > 1 ? 's' : ''})</div>
+           ${data.extra_knowledge.map(ek => `
+             <div class="ek-item">
+               <div class="ek-key">${ek.doc_key}</div>
+               <div class="ek-desc">${ek.description || '—'} &nbsp;·&nbsp; v${ek.version}</div>
+             </div>`).join('')}
+         </div>`
+      : `<div class="extra-knowledge-section">
+           <div class="ek-title">📚 Extra Crop Knowledge</div>
+           <div style="font-size:13px;color:#aaa;">No extra knowledge docs uploaded yet</div>
+         </div>`;
+
+    body.innerHTML = `
+      <div class="coverage-header">
+        <div>
+          <h3>${data.crop.charAt(0).toUpperCase() + data.crop.slice(1)} — Data Coverage</h3>
+          <div style="font-size:12px;color:#888;margin-top:3px;">Collection: ${data.collection}</div>
+        </div>
+        <div class="completeness-ring">
+          <div class="ring-number ${ringClass}">${pct}%</div>
+          <div>${present} / ${total} required</div>
+        </div>
+      </div>
+      <div class="coverage-grid">${requiredCards}</div>
+      <hr style="border:none;border-top:1px solid #eee;margin:16px 0;">
+      ${ekSection}
+    `;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // DB Browser
+  // ═══════════════════════════════════════════════════════════════════════
+
+  let allDocs = [];
+  let expandedId = null;
+
+  document.getElementById('refreshBtn').addEventListener('click', loadDB);
+  document.getElementById('dbSearch').addEventListener('input', renderTable);
+  document.getElementById('clearAllBtn').addEventListener('click', clearAllDocs);
+
+  async function clearAllDocs() {
+    if (!confirm('Delete EVERY document across ALL collections?\n\nThis cannot be undone.')) return;
+    try {
+      const res = await fetch(`${API}/db/clear-all`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.error) {
+        alert('Clear failed: ' + (data.reason || 'unknown error'));
+        return;
+      }
+      expandedId = null;
+      loadDB();
+    } catch (err) {
+      alert('Clear error: ' + err.message);
+    }
+  }
+
+  async function loadDB() {
+    document.getElementById('dbTable').innerHTML = '<div class="loading-row"><span class="spinner"></span>Loading…</div>';
+    try {
+      const res = await fetch(`${API}/db/browse`);
+      const data = await res.json();
+      allDocs = data.documents || [];
+      document.getElementById('docCount').textContent = `${data.total} doc${data.total !== 1 ? 's' : ''}`;
+      renderTable();
+    } catch (err) {
+      document.getElementById('dbTable').innerHTML =
+        `<div class="empty-state" style="color:#d32f2f">Could not reach API — is the server running?</div>`;
+    }
+  }
+
+  function renderTable() {
+    const q = document.getElementById('dbSearch').value.toLowerCase();
+    const filtered = q
+      ? allDocs.filter(d => JSON.stringify(d.metadata).toLowerCase().includes(q))
+      : allDocs;
+
+    document.getElementById('dbStats').textContent =
+      filtered.length !== allDocs.length ? `${filtered.length} / ${allDocs.length} shown` : `${allDocs.length} total`;
+
+    if (!filtered.length) {
+      document.getElementById('dbTable').innerHTML =
+        `<div class="empty-state">${allDocs.length ? 'No matches' : 'No documents stored yet'}</div>`;
+      return;
+    }
+
+    const rows = filtered.map(d => {
+      const m = d.metadata;
+      const isActive = m.is_active;
+      const isExpanded = expandedId === d.doc_id;
+
+      return `
+        <tr>
+          <td>
+            <div class="doc-key">${m.doc_key || '—'}</div>
+            <div style="font-size:11px;color:#999;margin-top:2px;">${d.collection}</div>
+          </td>
+          <td>${m.crop || '—'}</td>
+          <td><span class="pill pill-engine">${m.engine || '—'}</span></td>
+          <td><span class="pill pill-type">${m.type || '—'}</span></td>
+          <td style="text-align:center">v${m.version || '?'}</td>
+          <td>
+            <span class="pill ${isActive ? 'pill-active' : 'pill-inactive'}">
+              ${isActive ? '● active' : '○ inactive'}
+            </span>
+          </td>
+          <td>
+            <button class="expand-btn" onclick="toggleExpand('${d.doc_id}')">
+              ${isExpanded ? 'hide ▲' : 'details ▼'}
+            </button>
+          </td>
+        </tr>
+        ${isExpanded ? `
+        <tr>
+          <td colspan="7" style="padding:0 12px 16px">
+            <div class="detail-panel">
+              <div style="margin-bottom:8px;font-weight:600;font-size:12px;color:#555;">
+                doc_id: <span style="font-weight:400;color:#333">${d.doc_id}</span>
+              </div>
+              ${m.description ? `<div style="margin-bottom:8px;font-style:italic;color:#555">${m.description}</div>` : ''}
+              <div style="margin-bottom:6px;font-weight:600;color:#555;font-size:11px;">STORED TEXT PREVIEW</div>
+              <pre>${d.text_preview || '—'}${d.text_preview && d.text_preview.length >= 300 ? '\n… (truncated)' : ''}</pre>
+              <div style="margin-top:10px;font-weight:600;color:#555;font-size:11px;">FULL METADATA</div>
+              <pre>${JSON.stringify(m, null, 2)}</pre>
+              <button class="btn-danger" style="margin-top:10px;font-size:12px;padding:5px 14px"
+                onclick="deleteDoc('${d.doc_id}', '${d.doc_key}')">🗑 Delete this document</button>
+            </div>
+          </td>
+        </tr>` : ''}
+      `;
+    }).join('');
+
+    document.getElementById('dbTable').innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Doc Key</th><th>Crop</th><th>Engine</th><th>Type</th>
+            <th style="text-align:center">Ver</th><th>Status</th><th></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  function toggleExpand(docId) {
+    expandedId = expandedId === docId ? null : docId;
+    renderTable();
+  }
+
+  async function deleteDoc(docId, docKey) {
+    if (!confirm(`Delete "${docKey}"?\n\nThis cannot be undone.`)) return;
+    try {
+      const res = await fetch(`${API}/db/delete/${docId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.error) {
+        alert('Delete failed: ' + data.reason);
+      } else {
+        expandedId = null;
+        loadDB();
+      }
+    } catch (err) {
+      alert('Delete error: ' + err.message);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // Status checker
+  // ═══════════════════════════════════════════════════════════════════════
+
+  document.getElementById('statusBtn').addEventListener('click', async () => {
+    const id = document.getElementById('statusInput').value.trim();
+    if (!id) return;
+    const out = document.getElementById('statusResult');
+    out.textContent = 'Checking…';
+    try {
+      const res = await fetch(`${API}/status/${id}`);
+      const data = await res.json();
+      if (data.error) {
+        out.innerHTML = `<span style="color:#d32f2f">Not found or expired (TTL 30 min)</span>`;
+      } else {
+        out.innerHTML = `Status: <strong>${data.status}</strong> · Expires in <strong>${data.expires_in_minutes} min</strong>`;
+      }
+    } catch (err) {
+      out.innerHTML = `<span style="color:#d32f2f">${err.message}</span>`;
+    }
+  });
+
+  // ── Advisory Tester ────────────────────────────────────────────────────
+  // Defaults: today as current_date, 60 days ago as sowing_date — gives a
+  // sensible DAS for quick testing without manual date entry.
+  (function initAdvisoryDates() {
+    const today = new Date();
+    const sow = new Date(today.getTime() - 60 * 24 * 60 * 60 * 1000);
+    const fmt = d => d.toISOString().slice(0, 10);
+    document.getElementById('advCurrent').value = fmt(today);
+    document.getElementById('advSowing').value = fmt(sow);
+  })();
+
+  // Apple preset — fills the form with a perennial-tree demo context that
+  // exercises the ingested apple stage + pest_disease docs without needing a
+  // Supabase farm record.
+  document.getElementById('advApplePreset').addEventListener('click', () => {
+    document.getElementById('advCrop').value = 'apple';
+    // Sowing date represents tree-planting date; use 2 years ago so DAS lands
+    // the synthetic farm in a mature-tree window (year 3+ for fertigation).
+    const today = new Date();
+    const planted = new Date(today.getTime() - 730 * 24 * 60 * 60 * 1000);
+    document.getElementById('advSowing').value = planted.toISOString().slice(0, 10);
+    document.getElementById('advCurrent').value = today.toISOString().slice(0, 10);
+    document.getElementById('advExtra').value = JSON.stringify({
+      weather: { temp_c: 18, humidity_pct: 88, rainfall_mm: 2,
+                 forecast_3d_mm: 5, conducive_duration_hrs: 10 },
+      soil: { ph: 6.4, soc_pct: 0.8 }
+    }, null, 2);
+  });
+
+  document.getElementById('advRunBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('advRunBtn');
+    const card = document.getElementById('advResultCard');
+    const meta = document.getElementById('advRequestMeta');
+    const body = document.getElementById('advBody');
+
+    const crop = document.getElementById('advCrop').value.trim();
+    const sowing = document.getElementById('advSowing').value;
+    const current = document.getElementById('advCurrent').value;
+    const k = parseInt(document.getElementById('advK').value, 10) || 3;
+    const extraRaw = document.getElementById('advExtra').value.trim();
+
+    if (!crop || !sowing || !current) {
+      alert('crop, sowing_date and current_date are required');
+      return;
+    }
+
+    let extra = {};
+    if (extraRaw) {
+      try { extra = JSON.parse(extraRaw); }
+      catch (e) { alert('Optional context is not valid JSON: ' + e.message); return; }
+    }
+
+    const payload = { crop, sowing_date: sowing, current_date: current, ...extra };
+
+    btn.disabled = true;
+    card.style.display = 'block';
+    meta.innerHTML = '';
+    body.innerHTML = '<div class="loading-row"><span class="spinner"></span> Running 5 engines…</div>';
+
+    const t0 = performance.now();
+    try {
+      const r = await fetch(`${API}/advisory?k=${k}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await r.json();
+      const elapsed = Math.round(performance.now() - t0);
+
+      if (!r.ok) {
+        body.innerHTML = `<div class="banner-error status-banner">${data.detail || r.statusText}</div>`;
+        return;
+      }
+      renderAdvisory(data, elapsed);
+    } catch (err) {
+      body.innerHTML = `<div class="banner-error status-banner">${err.message}</div>`;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  function renderAdvisory(data, elapsedMs) {
+    const meta = document.getElementById('advRequestMeta');
+    const body = document.getElementById('advBody');
+    const ctx = data.context || {};
+    meta.innerHTML = `
+      <strong>request_id:</strong> <code>${data.request_id || '—'}</code> ·
+      <strong>crop:</strong> ${ctx.crop} ·
+      <strong>DAS:</strong> ${ctx.days_after_sowing} ·
+      <strong>elapsed:</strong> ${elapsedMs} ms
+    `;
+
+    // Render in the same order the backend declares engines.
+    const ORDER = ['stage', 'fertilizer', 'pest_disease_risk', 'yield', 'financial'];
+    const LABELS = {
+      stage: '🌱 Stage', fertilizer: '🧪 Fertilizer (INM)',
+      pest_disease_risk: '🐛 E4.1 Pest & Disease Risk', 'yield': '📈 Yield',
+      financial: '💰 Financial',
+    };
+
+    body.innerHTML = ORDER.map(key => {
+      const a = data[key];
+      if (!a) return '';
+      const status = a.status || (a.parse_status === 'fallback' ? 'fallback' : 'ok');
+      const badgeClass = status === 'ok' ? 'green' : (status === 'fallback' ? 'gray' : 'red');
+      const sources = (a.source_docs || []).map(s =>
+        typeof s === 'string'
+          ? `<span class="pill pill-engine">${s}</span>`
+          : `<span class="pill pill-engine">${s.doc_key} v${s.version}</span>`
+      ).join(' ');
+      const detailsJson = JSON.stringify(a.details || {}, null, 2);
+      return `
+        <div class="card" style="box-shadow:none;border:1px solid #e8e8e8;margin-bottom:12px;">
+          <h2>
+            ${LABELS[key] || key}
+            <span class="badge ${badgeClass}">${status}</span>
+            ${a.prompt_version ? `<span class="badge gray">prompt ${a.prompt_version}</span>` : ''}
+          </h2>
+          <div style="font-size:14px;color:#1a1a2e;margin-bottom:10px;">${escapeHtml(a.summary || '')}</div>
+          ${sources ? `<div style="margin-bottom:10px;">${sources}</div>` : ''}
+          <details>
+            <summary style="cursor:pointer;font-size:12px;color:#1967d2;">details</summary>
+            <pre style="background:#f8f9fa;padding:10px;border-radius:6px;font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-word;margin-top:8px;">${escapeHtml(detailsJson)}</pre>
+          </details>
+          ${a.error ? `<div class="error-block"><div class="err-label">${a.error.type}</div><div class="err-field">${escapeHtml(a.error.message || '')}</div></div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+</script>
+</body>
+</html>

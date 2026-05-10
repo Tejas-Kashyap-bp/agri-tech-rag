@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Engine Demos — Apple Advisory</title>
+<link rel="stylesheet" href="/static/demo.css">
+<style>
+  .grid { display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); }
+  a.card {
+    display:block; text-decoration:none; color:inherit;
+    background:var(--card); border:1px solid var(--line); border-radius:10px;
+    padding:18px; transition:border-color .15s, transform .15s;
+  }
+  a.card:hover { border-color:var(--green); transform:translateY(-1px); }
+  a.card .icon { font-size:24px; }
+  a.card h2 { margin:8px 0 4px; font-size:16px; color:var(--green-dark); }
+  a.card p { margin:0; font-size:13px; color:var(--muted); line-height:1.45; }
+  a.card .params { margin-top:10px; font-size:11px; color:var(--muted);
+                   text-transform:uppercase; letter-spacing:.5px; }
+  .intro { font-size:14px; color:var(--muted); margin:0 0 18px; line-height:1.55; }
+  .intro b { color:var(--text); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Apple Advisory — Engine Demos</h1>
+  <div class="links">
+    <a href="/farm">Full farm advisory</a>
+    <a href="/">Dev console</a>
+    <a href="/docs" target="_blank">Swagger</a>
+  </div>
+</header>
+<main>
+  <p class="intro">
+    Each card opens a controlled simulation of a single advisory engine.
+    Inputs are fixed dropdowns — pick a combination and click
+    <b>Generate advisory</b> to see how the engine reasons over the
+    retrieved knowledge. Use these pages to demonstrate cause-and-effect
+    behaviour without depending on Supabase, Open-Meteo, or Sentinel Hub.
+  </p>
+
+  <div class="grid">
+    <a class="card" href="/farm/crop-stage">
+      <div class="icon">🌱</div>
+      <h2>Crop Stage</h2>
+      <p>Determines the orchard's growth stage from calendar date and altitude.</p>
+      <div class="params">Month · Altitude</div>
+    </a>
+
+    <a class="card" href="/farm/fertilizer">
+      <div class="icon">🧪</div>
+      <h2>Fertilizer (INM)</h2>
+      <p>Picks the right fertigation step for the current stage and field condition.</p>
+      <div class="params">Stage · Soil health · Field condition</div>
+    </a>
+
+    <a class="card" href="/farm/pest-risk">
+      <div class="icon">🐛</div>
+      <h2>Pest &amp; Disease Risk</h2>
+      <p>Evaluates pest/disease rules against a synthetic weather snapshot.</p>
+      <div class="params">Stage · Temperature · Humidity</div>
+    </a>
+
+    <a class="card" href="/farm/ipm">
+      <div class="icon">💊</div>
+      <h2>IPM Spray Schedule</h2>
+      <p>Builds a per-tree spray plan scaled to orchard size and triggered organism.</p>
+      <div class="params">Stage · Tree count · Triggered organism</div>
+    </a>
+
+    <a class="card" href="/farm/yield">
+      <div class="icon">🌾</div>
+      <h2>Yield</h2>
+      <p>Computes per-tree and total yield with a field-condition correction.</p>
+      <div class="params">Stage · Tree count · Field condition</div>
+    </a>
+  </div>
+</main>
+</body>
+</html>

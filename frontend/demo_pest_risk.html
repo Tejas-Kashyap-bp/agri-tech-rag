@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demo — Pest & Disease Risk Engine</title>
+<link rel="stylesheet" href="/static/demo.css">
+</head>
+<body>
+<header>
+  <h1>Pest &amp; Disease Risk Engine</h1>
+  <div class="links">
+    <a href="/demo">← All engines</a>
+    <a href="/farm/crop-stage">Stage</a>
+    <a href="/farm/fertilizer">Fertilizer</a>
+    <a href="/farm/pest-risk">Pest Risk</a>
+    <a href="/farm/ipm">IPM</a>
+    <a href="/farm/yield">Yield</a>
+  </div>
+</header>
+<main>
+  <div class="panel">
+    <h3>Inputs</h3>
+    <div class="row">
+      <div>
+        <label for="stage">Crop Stage (from Crop Stage Engine)</label>
+        <select id="stage">
+          <option>Dormant</option><option>Bud Break</option>
+          <option selected>Flowering</option><option>Fruit Set</option>
+          <option>Fruit Development</option><option>Maturity</option>
+          <option>Post-Harvest</option>
+        </select>
+      </div>
+      <div>
+        <label for="temp">Temperature</label>
+        <select id="temp">
+          <option>Cool (15°C)</option>
+          <option selected>Mild (22°C)</option>
+          <option>Warm (28°C)</option>
+        </select>
+      </div>
+      <div>
+        <label for="hum">Humidity</label>
+        <select id="hum">
+          <option>Dry (40%)</option>
+          <option selected>Moderate (70%)</option>
+          <option>Humid (95%)</option>
+        </select>
+      </div>
+      <div>
+        <label for="dur">Conducive duration</label>
+        <select id="dur">
+          <option>Short (8 h)</option>
+          <option selected>Medium (12 h)</option>
+          <option>Long (24 h)</option>
+          <option>Very Long (48 h)</option>
+        </select>
+      </div>
+      <div>
+        <label for="canopy">Canopy density (LAI from satellite)</label>
+        <select id="canopy">
+          <option selected>Unknown</option>
+          <option>Sparse (LAI 1.0)</option>
+          <option>Moderate (LAI 2.5)</option>
+          <option>Dense (LAI 4.5)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <button id="generate" class="generate" type="button">Generate advisory</button>
+  <div id="output" class="output"><span class="muted">Pick inputs to run the engine.</span></div>
+</main>
+<script src="/static/demo_explain.js"></script>
+<script src="/static/demo.js"></script>
+<script>
+  initDemo({
+    endpoint: "/engine/pest-risk",
+    fields: { crop_stage: "stage", temperature: "temp", humidity: "hum", duration: "dur", canopy: "canopy" },
+  });
+</script>
+</body>
+</html>

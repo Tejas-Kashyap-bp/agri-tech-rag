@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demo — Fertilizer Engine</title>
+<link rel="stylesheet" href="/static/demo.css">
+</head>
+<body>
+<header>
+  <h1>Fertilizer Engine</h1>
+  <div class="links">
+    <a href="/demo">← All engines</a>
+    <a href="/farm/crop-stage">Stage</a>
+    <a href="/farm/fertilizer">Fertilizer</a>
+    <a href="/farm/pest-risk">Pest Risk</a>
+    <a href="/farm/ipm">IPM</a>
+    <a href="/farm/yield">Yield</a>
+  </div>
+</header>
+<main>
+  <div class="panel">
+    <h3>Inputs</h3>
+    <div class="row">
+      <div>
+        <label for="stage">Crop Stage (from Crop Stage Engine)</label>
+        <select id="stage">
+          <option>Dormant</option><option>Bud Break</option>
+          <option selected>Flowering</option><option>Fruit Set</option>
+          <option>Fruit Development</option><option>Maturity</option>
+          <option>Post-Harvest</option>
+        </select>
+      </div>
+      <div>
+        <label for="soil">Soil Health</label>
+        <select id="soil">
+          <option>Low SOC</option>
+          <option selected>Normal</option>
+          <option>High SOC</option>
+        </select>
+      </div>
+      <div>
+        <label for="field">Field Condition</label>
+        <select id="field">
+          <option selected>Healthy</option>
+          <option>Moderate Stress</option>
+          <option>Severe Stress</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <button id="generate" class="generate" type="button">Generate advisory</button>
+  <div id="output" class="output"><span class="muted">Pick inputs to run the engine.</span></div>
+</main>
+<script src="/static/demo_explain.js"></script>
+<script src="/static/demo.js"></script>
+<script>
+  initDemo({
+    endpoint: "/engine/fertilizer",
+    fields: { crop_stage: "stage", soil_health: "soil", field_condition: "field" },
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AGRI-RAG · Neural Advisory</title>
+<style>
+  :root {
+    --bg-0:#070a13; --bg-1:#0d1322; --bg-2:#131c33;
+    --ink:#e8ecf6; --ink-dim:#9aa3bf; --ink-faint:#5f6781;
+    --line:#1f2942; --line-2:#28335a;
+    --accent:#7c5cff;        /* violet */
+    --accent-2:#19d4c8;      /* cyan */
+    --accent-warm:#ffb547;
+    --err:#ff6478;
+    --ok:#4ade80;
+    --grad: linear-gradient(135deg,#7c5cff 0%,#19d4c8 100%);
+    --grad-soft: linear-gradient(135deg,rgba(124,92,255,.18),rgba(25,212,200,.12));
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg-0);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",sans-serif;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(800px 500px at 12% -10%,rgba(124,92,255,.18),transparent 60%),
+      radial-gradient(700px 400px at 95% 0%,rgba(25,212,200,.14),transparent 60%),
+      var(--bg-0);
+  }
+
+  header{
+    position:sticky;top:0;z-index:5;
+    backdrop-filter:blur(14px);
+    background:rgba(7,10,19,.7);
+    border-bottom:1px solid var(--line);
+    padding:14px 28px;display:flex;align-items:center;justify-content:space-between;
+  }
+  .brand{display:flex;align-items:center;gap:12px;}
+  .logo{
+    width:32px;height:32px;border-radius:9px;background:var(--grad);
+    display:grid;place-items:center;color:#0a0f1c;font-weight:800;font-size:16px;
+    box-shadow:0 0 24px rgba(124,92,255,.45);
+  }
+  .brand h1{margin:0;font-size:16px;font-weight:600;letter-spacing:.2px}
+  .brand .sub{font-size:12px;color:var(--ink-dim)}
+  .pill-rag{
+    font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;
+    background:var(--grad-soft);color:var(--accent-2);
+    border:1px solid var(--line-2);padding:4px 10px;border-radius:999px;
+  }
+  .right-meta{display:flex;align-items:center;gap:10px;color:var(--ink-faint);font-size:12px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok)}
+
+  main{max-width:980px;margin:30px auto 80px;padding:0 18px;}
+
+  .panel{
+    background:linear-gradient(180deg,var(--bg-1),var(--bg-2));
+    border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px;
+    box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 12px 40px rgba(0,0,0,.4);
+  }
+  .panel h3{
+    margin:0 0 12px;font-size:11px;color:var(--ink-dim);font-weight:700;
+    text-transform:uppercase;letter-spacing:.18em;
+  }
+
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+  label{font-size:12px;color:var(--ink-dim);display:block;margin-bottom:6px}
+  input,select,textarea{
+    width:100%;padding:10px 12px;font-size:14px;color:var(--ink);
+    background:rgba(255,255,255,.03);border:1px solid var(--line-2);
+    border-radius:8px;outline:none;font-family:inherit;
+    transition:border .15s,box-shadow .15s,background .15s;
+  }
+  input:focus,select:focus,textarea:focus{
+    border-color:var(--accent);background:rgba(124,92,255,.06);
+    box-shadow:0 0 0 3px rgba(124,92,255,.15);
+  }
+  textarea{font-family:ui-monospace,Menlo,monospace;font-size:12px;resize:vertical}
+  .hint{font-size:11px;color:var(--ink-faint);margin-top:5px;line-height:1.4}
+  details summary{cursor:pointer;font-size:12px;color:var(--accent-2);user-select:none}
+  details summary:hover{color:var(--ink)}
+
+  .actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  button{
+    padding:11px 22px;border:0;border-radius:10px;cursor:pointer;
+    font-size:14px;font-weight:600;color:#08101e;background:var(--grad);
+    box-shadow:0 8px 24px rgba(124,92,255,.35);
+    transition:transform .08s,box-shadow .15s,filter .15s;
+  }
+  button:hover{filter:brightness(1.08)}
+  button:active{transform:translateY(1px)}
+  button:disabled{filter:grayscale(.6) brightness(.7);cursor:not-allowed;box-shadow:none}
+  button.ghost{
+    background:transparent;color:var(--ink-dim);border:1px solid var(--line-2);
+    box-shadow:none;font-weight:500;padding:10px 14px;
+  }
+  button.ghost:hover{color:var(--ink);border-color:var(--accent-2)}
+
+  .status{font-size:13px;color:var(--ink-dim);display:flex;align-items:center;gap:8px}
+  .err{color:var(--err);font-size:13px;margin-top:6px}
+  .spinner{
+    width:14px;height:14px;border:2px solid var(--line-2);border-top-color:var(--accent-2);
+    border-radius:50%;animation:spin .8s linear infinite;display:inline-block;vertical-align:middle;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .meta-strip{
+    display:flex;flex-wrap:wrap;gap:10px 18px;font-size:12px;color:var(--ink-dim);
+    padding:14px 16px;border:1px solid var(--line);border-radius:12px;
+    background:rgba(255,255,255,.02);margin-bottom:14px;
+  }
+  .meta-strip b{color:var(--ink);font-weight:600}
+  .badge{
+    display:inline-block;font-size:10px;font-weight:700;letter-spacing:.12em;
+    text-transform:uppercase;padding:3px 8px;border-radius:6px;
+  }
+  .badge.ok{background:rgba(74,222,128,.12);color:var(--ok);border:1px solid rgba(74,222,128,.3)}
+  .badge.warn{background:rgba(255,181,71,.12);color:var(--accent-warm);border:1px solid rgba(255,181,71,.3)}
+  .badge.err{background:rgba(255,100,120,.12);color:var(--err);border:1px solid rgba(255,100,120,.3)}
+  .badge.fb{background:rgba(124,92,255,.12);color:var(--accent);border:1px solid rgba(124,92,255,.3)}
+
+  .summary-card{
+    border:1px solid transparent;
+    background:
+      linear-gradient(var(--bg-1),var(--bg-1)) padding-box,
+      var(--grad) border-box;
+    border-radius:14px;padding:20px;margin-bottom:18px;
+    position:relative;overflow:hidden;
+  }
+  .summary-card::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(600px 200px at 90% -20%,rgba(25,212,200,.18),transparent 70%);
+  }
+  .summary-card h2{
+    margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--accent-2);
+  }
+  .summary-card p{margin:0;font-size:15px;line-height:1.55;color:var(--ink)}
+
+  .engines{display:grid;gap:12px}
+  .engine{
+    background:linear-gradient(180deg,var(--bg-1),var(--bg-2));
+    border:1px solid var(--line);border-radius:12px;overflow:hidden;
+    transition:border-color .15s;
+  }
+  .engine:hover{border-color:var(--line-2)}
+  .engine summary{
+    list-style:none;cursor:pointer;padding:14px 16px;
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+  }
+  .engine summary::-webkit-details-marker{display:none}
+  .engine .ehead{display:flex;align-items:center;gap:12px;min-width:0}
+  .engine .icon{
+    width:34px;height:34px;border-radius:9px;display:grid;place-items:center;
+    font-size:16px;background:var(--grad-soft);border:1px solid var(--line-2);
+  }
+  .engine .ename{font-weight:600;font-size:14px}
+  .engine .eid{font-size:11px;color:var(--ink-faint);font-family:ui-monospace,Menlo,monospace}
+  .engine .arrow{color:var(--ink-faint);font-size:12px}
+  .engine[open] .arrow::before{content:"▼"}
+  .engine:not([open]) .arrow::before{content:"▶"}
+  .ebody{padding:0 16px 16px;border-top:1px solid var(--line)}
+  .ebody p.text{font-size:14px;line-height:1.55;margin:14px 0 8px}
+  .ebody .sources{font-size:11px;color:var(--ink-faint);margin-top:8px}
+  .ebody .sources code{
+    background:rgba(255,255,255,.04);padding:2px 6px;border-radius:4px;
+    color:var(--accent-2);font-size:11px;
+  }
+  .ebody .raw-toggle{
+    font-size:11px;color:var(--ink-faint);cursor:pointer;user-select:none;margin-top:10px;
+    display:inline-block;padding:4px 8px;border:1px solid var(--line);border-radius:6px;
+  }
+  .ebody .raw-toggle:hover{color:var(--accent-2);border-color:var(--accent-2)}
+  .ebody .raw{
+    margin-top:8px;background:#05080f;border:1px solid var(--line);border-radius:8px;
+    padding:12px;font-size:11px;font-family:ui-monospace,Menlo,monospace;
+    max-height:280px;overflow:auto;white-space:pre-wrap;color:#a8b5d6;
+  }
+  .skipped{color:var(--accent-warm);font-style:italic;font-size:13px;margin:14px 0}
+
+  .empty{
+    color:var(--ink-faint);padding:50px 20px;text-align:center;font-size:13px;
+    border:1px dashed var(--line-2);border-radius:12px;
+  }
+  .neural-hint{font-size:11px;color:var(--ink-faint);text-align:center;margin-top:18px;letter-spacing:.05em}
+  .neural-hint span{color:var(--accent-2)}
+
+  /* Mode tabs */
+  .modetabs{
+    display:inline-flex;background:var(--bg-1);border:1px solid var(--line);
+    border-radius:10px;padding:4px;gap:4px;margin-bottom:18px;
+  }
+  .modetab{
+    padding:8px 16px;border-radius:7px;cursor:pointer;font-size:13px;
+    color:var(--ink-dim);user-select:none;transition:all .15s;
+  }
+  .modetab.active{background:var(--grad);color:#08101e;font-weight:600;
+    box-shadow:0 4px 14px rgba(124,92,255,.3);}
+  .modetab:not(.active):hover{color:var(--ink)}
+  .modepane{display:none}
+  .modepane.active{display:block}
+  .checkbox{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);cursor:pointer}
+  .checkbox input{width:auto}
+  input[type=file]{padding:6px;background:rgba(255,255,255,.03)}
+  .sat-block{margin:10px 0;padding:10px 12px;border-radius:10px;
+    background:rgba(95,200,140,.08);border:1px solid rgba(95,200,140,.28)}
+  .sat-head{font-size:11px;letter-spacing:.4px;text-transform:uppercase;
+    color:#7fd6a4;margin-bottom:4px}
+  .sat-text{margin:4px 0;color:var(--ink)}
+  .sat-sub{margin:4px 0;color:var(--muted);font-size:12.5px}
+  .sat-pills{margin-top:6px;display:flex;flex-wrap:wrap;gap:5px}
+  .sat-pill{display:inline-block;padding:2px 8px;border-radius:99px;
+    background:rgba(95,200,140,.15);color:#9ee0b8;font-size:11px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">⌬</div>
+    <div>
+      <h1>AGRI-RAG <span class="pill-rag">Neural Advisory</span></h1>
+      <div class="sub">Knowledge-retrieved · apple engine pipeline · LLM reasoned</div>
+    </div>
+  </div>
+  <div class="right-meta">
+    <span class="dot" id="healthDot"></span>
+    <span id="healthText">checking…</span>
+  </div>
+</header>
+
+<main>
+
+  <div class="modetabs" role="tablist">
+    <div class="modetab active" data-mode="farm" role="tab">🚜 Farm Mode</div>
+    <div class="modetab" data-mode="dev" role="tab">⚙ Developer Mode</div>
+  </div>
+
+  <!-- ═══ FARM MODE — fetches everything from Supabase by farm_id ═══ -->
+  <div class="modepane active" id="pane-farm">
+
+    <div class="panel">
+      <h3>Farm</h3>
+      <div class="row">
+        <div>
+          <label>Farm ID</label>
+          <select id="farm_id_select">
+            <option value="F124">F124 — maize · Karnal HR · drip</option>
+            <option value="F125">F125 — wheat · Ludhiana PB · flood</option>
+            <option value="F126">F126 — rice · Meerut UP · basin</option>
+            <option value="F127">F127 — cotton · Nagpur MH · drip</option>
+            <option value="F128">F128 — no active season (negative test)</option>
+            <option value="F123">F123 — legacy dummy farm</option>
+            <option value="__custom">Custom…</option>
+          </select>
+        </div>
+        <div id="farm_id_custom_wrap" style="display:none">
+          <label>Custom farm ID</label>
+          <input id="farm_id_custom" type="text" placeholder="e.g. F999" />
+        </div>
+        <div>
+          <label>Language</label>
+          <select id="farm_lang">
+            <option>English</option>
+            <option>Hindi</option>
+            <option>Marathi</option>
+            <option>Punjabi</option>
+          </select>
+        </div>
+        <div>
+          <label>Current date (override)</label>
+          <input id="farm_current" type="date" />
+        </div>
+        <div>
+          <label>k (docs / engine)</label>
+          <input id="farm_k" type="number" value="1" min="1" max="10" />
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Optional Inputs</h3>
+      <div class="row">
+        <div>
+          <label>Farmer soil report (PNG/JPG)</label>
+          <input id="farm_soil_file" type="file" accept=".png,.jpg,.jpeg" />
+          <div class="hint">If provided, /data/soil/upload runs OCR and the result overrides SoilGrids/Supabase. (requires that endpoint to be wired — see hint below)</div>
+        </div>
+        <div>
+          <label>Soil moisture (mm) — IoT</label>
+          <input id="farm_soil_moisture" type="number" min="0" step="0.1" placeholder="e.g. 22.5" />
+          <div class="hint">Optional. Surfaces in `extra.iot_soil_moisture_mm`.</div>
+        </div>
+        <div>
+          <label class="checkbox" style="margin-top:18px">
+            <input id="farm_sat" type="checkbox" checked />
+            Send sample satellite (NDVI/EVI/NDWI)
+          </label>
+          <div class="hint">Stub timeseries so E5 / E1 see a satellite signal.</div>
+        </div>
+      </div>
+      <div class="hint" style="margin-top:12px">
+        Soil + weather are fetched server-side from SoilGrids + Open-Meteo using the farm's lat/lon. No need to type them in.
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Run</h3>
+      <div class="actions">
+        <button id="goFarm">⌬ Get advisory for this farm</button>
+        <span id="farm_status" class="status"></span>
+      </div>
+      <div id="farm_err" class="err"></div>
+    </div>
+
+  </div>
+
+  <!-- ═══ DEVELOPER MODE — raw AdvisoryContext JSON ═══ -->
+  <div class="modepane" id="pane-dev">
+
+  <div class="panel">
+    <h3>Farm Context</h3>
+    <div class="row">
+      <div>
+        <label>Crop</label>
+        <select id="crop">
+          <option value="maize">maize</option>
+          <option value="wheat">wheat</option>
+          <option value="sugarcane">sugarcane</option>
+          <option value="tomato">tomato</option>
+          <option value="__custom">custom…</option>
+        </select>
+      </div>
+      <div id="cropCustomWrap" style="display:none">
+        <label>Custom crop</label>
+        <input id="cropCustom" type="text" placeholder="e.g. cotton" />
+      </div>
+      <div>
+        <label>Sowing date</label>
+        <input id="sowing" type="date" />
+      </div>
+      <div>
+        <label>Current date</label>
+        <input id="current" type="date" />
+      </div>
+      <div>
+        <label>k (docs / engine)</label>
+        <input id="k" type="number" value="1" min="1" max="10" />
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Optional Context Signals</h3>
+    <div class="row">
+      <div>
+        <label>Weather (JSON)</label>
+        <textarea id="weather" rows="3" placeholder='{"forecast_3d_rain_mm":0,"temp_c_max":34}'></textarea>
+      </div>
+      <div>
+        <label>Soil (JSON)</label>
+        <textarea id="soil" rows="3" placeholder='{"soc_pct":0.45,"ph":6.8}'></textarea>
+      </div>
+      <div>
+        <label>Satellite (JSON)</label>
+        <textarea id="satellite" rows="3" placeholder='{"ndvi":0.62}'></textarea>
+      </div>
+      <div>
+        <label>Detection (JSON)</label>
+        <textarea id="detection" rows="3" placeholder='{"pest":"fall_armyworm"}'></textarea>
+      </div>
+      <div>
+        <label>Extra (JSON)</label>
+        <textarea id="extra" rows="3" placeholder='{"loan":60000,"market_price":20}'></textarea>
+      </div>
+    </div>
+    <div class="hint">All optional. Pass a JSON object or leave blank. Bad JSON in any box will block the request.</div>
+  </div>
+
+  <div class="panel">
+    <h3>Run</h3>
+    <div class="actions">
+      <button id="goAll">⌬ Run all engines (apple)</button>
+      <select id="singleEngine" style="width:auto;min-width:260px">
+        <option value="">— or run a single engine —</option>
+        <option value="eng1">E1 · Crop stage</option>
+        <option value="eng3">E3 · Fertilizer (INM)</option>
+        <option value="eng4">E4.1 · Pest &amp; Disease Risk (real-time)</option>
+        <option value="" disabled>E4.2 · Pest &amp; Disease Cure (coming soon)</option>
+        <option value="eng5">E5 · Yield outlook</option>
+        <option value="eng6">E6 · Financial risk</option>
+      </select>
+      <button id="goOne" class="ghost">▶ Run selected</button>
+      <span id="status" class="status"></span>
+    </div>
+    <div id="err" class="err"></div>
+  </div>
+
+  </div><!-- /pane-dev -->
+
+  <div id="results"></div>
+  <div id="empty" class="empty">
+    Configure the farm context above and run the pipeline.<br>
+    Each engine retrieves knowledge from ChromaDB, then an LLM reasons over it.
+  </div>
+
+  <div class="neural-hint">
+    <span>retrieve</span> → <span>reason</span> → <span>respond</span>
+  </div>
+
+</main>
+
+<script>
+const ENGINE_META = {
+  stage:             { icon:"🌱", label:"Crop stage",                 eid:"e1_stage" },
+  fertilizer:        { icon:"🧪", label:"Fertilizer (INM)",           eid:"e3_nutrition" },
+  pest_disease_risk: { icon:"🐛", label:"E4.1 · Pest & Disease Risk", eid:"e4_pest_disease_risk" },
+  pest_disease_cure: { icon:"💊", label:"E4.2 · Pest & Disease Cure (coming soon)", eid:"deferred" },
+  yield:             { icon:"🌾", label:"Yield outlook",              eid:"e5_yield" },
+  financial:         { icon:"💰", label:"Financial risk",             eid:"e6_financial" },
+};
+const ENGINE_ORDER = ["stage","fertilizer","pest_disease_risk","pest_disease_cure","yield","financial"];
+
+// API base — overridable via window.API_BASE for cross-origin deploys.
+const API = (typeof window !== "undefined" && window.API_BASE) ? window.API_BASE : "";
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+
+function parseJsonBox(id, label) {
+  const v = $(id).value.trim();
+  if (!v) return null;
+  try { return JSON.parse(v); }
+  catch (e) { throw new Error(`${label}: ${e.message}`); }
+}
+
+function buildContext() {
+  const cropSel = $("crop").value;
+  const crop = cropSel === "__custom" ? $("cropCustom").value.trim() : cropSel;
+  if (!crop) throw new Error("crop is required");
+  const sowing = $("sowing").value;
+  const current = $("current").value;
+  if (!sowing) throw new Error("sowing date is required");
+  if (!current) throw new Error("current date is required");
+
+  const ctx = { crop, sowing_date: sowing, current_date: current };
+  const weather   = parseJsonBox("weather",   "weather JSON");   if (weather)   ctx.weather = weather;
+  const soil      = parseJsonBox("soil",      "soil JSON");      if (soil)      ctx.soil = soil;
+  const satellite = parseJsonBox("satellite", "satellite JSON"); if (satellite) ctx.satellite = satellite;
+  const detection = parseJsonBox("detection", "detection JSON"); if (detection) ctx.detection = detection;
+  const extra     = parseJsonBox("extra",     "extra JSON");     if (extra)     ctx.extra = extra;
+  return ctx;
+}
+
+async function callApi(path, ctx, k) {
+  const url = `${API}${path}?k=${encodeURIComponent(k)}`;
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(ctx),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.detail || `HTTP ${r.status}`);
+  return j;
+}
+
+function statusBadge(slot) {
+  if (!slot) return '<span class="badge warn">missing</span>';
+  if (slot.status === "error") return '<span class="badge err">error</span>';
+  if (slot.parse_status === "fallback") return '<span class="badge fb">fallback</span>';
+  return '<span class="badge ok">ok</span>';
+}
+
+function renderSatelliteBlock(slot) {
+  if (!slot) return "";
+  const advisory = slot.satellite_advisory;
+  const summary = slot.satellite_summary;
+  const d = slot.details || {};
+  const inputs = d.satellite_inputs || {};
+  if (!advisory && !summary && !d.ndvi_health && !d.ndvi_trend && !d.ndre_status) return "";
+  const pills = [];
+  if (d.ndvi_health) pills.push(`NDVI health: ${d.ndvi_health}`);
+  if (d.ndvi_trend) pills.push(`NDVI trend: ${d.ndvi_trend}`);
+  if (d.ndre_status) pills.push(`NDRE: ${d.ndre_status}`);
+  if (inputs.ndvi_current != null) pills.push(`NDVI ${inputs.ndvi_current}`);
+  if (inputs.ndvi_delta_7d != null) pills.push(`Δ7d ${inputs.ndvi_delta_7d}`);
+  if (inputs.ndre_current != null) pills.push(`NDRE ${inputs.ndre_current}`);
+  return `<div class="sat-block">
+    <div class="sat-head">🛰 satellite advisory</div>
+    ${advisory ? `<p class="sat-text">${esc(advisory)}</p>` : ""}
+    ${summary ? `<p class="sat-sub">${esc(summary)}</p>` : ""}
+    ${pills.length ? `<div class="sat-pills">${pills.map(p => `<span class="sat-pill">${esc(p)}</span>`).join("")}</div>` : ""}
+  </div>`;
+}
+
+function renderEngineCard(key, slot, openByDefault=false) {
+  const meta = ENGINE_META[key];
+  // E4.2 placeholder — no backend, render a "coming soon" card.
+  if (key === "pest_disease_cure") {
+    return `<details class="engine">
+      <summary>
+        <div class="ehead">
+          <div class="icon">${meta.icon}</div>
+          <div>
+            <div class="ename">${meta.label}</div>
+            <div class="eid">${meta.eid}</div>
+          </div>
+        </div>
+        <div><span class="badge fb">deferred</span> <span class="arrow"></span></div>
+      </summary>
+      <div class="ebody">
+        <p class="skipped">IPM-aligned cure / spray plan. Awaiting client IPM data — see <code>structured_data/apple/PEST_DISEASE_ENGINE_PLAN.md</code>.</p>
+      </div>
+    </details>`;
+  }
+  const badge = statusBadge(slot);
+  let body = "";
+  if (!slot) {
+    body = `<div class="ebody"><p class="skipped">Not run.</p></div>`;
+  } else if (slot.status === "error") {
+    body = `<div class="ebody">
+      <p class="skipped">⚠ ${esc(slot.summary || (slot.error && slot.error.message) || "engine failed")}</p>
+      <pre class="raw" style="display:block">${esc(JSON.stringify(slot.error || slot, null, 2))}</pre>
+    </div>`;
+  } else {
+    const sources = (slot.source_docs || [])
+      .map(s => `<code>${esc(s.doc_key)}${s.version != null ? "·v"+s.version : ""}</code>`)
+      .join(" ");
+    const satBlock = (key === "fertilizer") ? renderSatelliteBlock(slot) : "";
+    body = `<div class="ebody">
+      <p class="text">${esc(slot.summary || "")}</p>
+      ${satBlock}
+      ${sources ? `<div class="sources">📚 sources: ${sources}</div>` : ""}
+      <div class="raw-toggle" onclick="const n=this.nextElementSibling; n.style.display = n.style.display==='block'?'none':'block';">▸ raw details</div>
+      <pre class="raw" style="display:none">${esc(JSON.stringify(slot, null, 2))}</pre>
+    </div>`;
+  }
+  const open = openByDefault ? "open" : "";
+  return `<details class="engine" ${open}>
+    <summary>
+      <div class="ehead">
+        <div class="icon">${meta.icon}</div>
+        <div>
+          <div class="ename">${meta.label}</div>
+          <div class="eid">${meta.eid}</div>
+        </div>
+      </div>
+      <div>${badge} <span class="arrow"></span></div>
+    </summary>
+    ${body}
+  </details>`;
+}
+
+function renderAll(data) {
+  const ctx = data.context || {};
+  let html = `<div class="meta-strip">
+    <span><b>Request:</b> ${esc(data.request_id || "—")}</span>
+    <span><b>Crop:</b> ${esc(ctx.crop)}</span>
+    <span><b>Sown:</b> ${esc(ctx.sowing_date)}</span>
+    <span><b>Today:</b> ${esc(ctx.current_date)}</span>
+    <span><b>DAS:</b> ${esc(ctx.days_after_sowing)}</span>
+  </div>`;
+
+  // Headline from stage engine, fallback to pest/disease risk.
+  const lead = (data.stage && data.stage.summary) || (data.pest_disease_risk && data.pest_disease_risk.summary);
+  if (lead) {
+    html += `<div class="summary-card">
+      <h2>Lead insight</h2>
+      <p>${esc(lead)}</p>
+    </div>`;
+  }
+
+  html += `<div class="engines">`;
+  for (const key of ENGINE_ORDER) html += renderEngineCard(key, data[key], false);
+  html += `</div>`;
+
+  $("results").innerHTML = html;
+  $("empty").style.display = "none";
+}
+
+function renderSingle(data) {
+  const ctx = data.context || {};
+  // Find the engine output key in the response (anything that isn't meta).
+  const ignore = new Set(["request_id","engine_id","context","upstream"]);
+  const key = Object.keys(data).find(k => !ignore.has(k));
+  let html = `<div class="meta-strip">
+    <span><b>Engine:</b> ${esc(data.engine_id)}</span>
+    <span><b>Request:</b> ${esc(data.request_id || "—")}</span>
+    <span><b>Crop:</b> ${esc(ctx.crop)}</span>
+    <span><b>DAS:</b> ${esc(ctx.days_after_sowing)}</span>
+  </div>`;
+
+  html += `<div class="engines">${renderEngineCard(key, data[key], true)}</div>`;
+
+  if (data.upstream && Object.keys(data.upstream).length) {
+    html += `<div class="panel" style="margin-top:14px">
+      <h3>Upstream engines (auto-run dependencies)</h3>
+      <div class="engines">`;
+    for (const upKey of Object.keys(data.upstream)) {
+      html += renderEngineCard(upKey, data.upstream[upKey], false);
+    }
+    html += `</div></div>`;
+  }
+  $("results").innerHTML = html;
+  $("empty").style.display = "none";
+}
+
+async function runAll() {
+  $("err").textContent = "";
+  let ctx;
+  try { ctx = buildContext(); } catch (e) { $("err").textContent = e.message; return; }
+  const k = parseInt($("k").value, 10) || 1;
+  setBusy(true, "Running all apple engines (≈ 3 LLM round-trips)…");
+  const t0 = performance.now();
+  try {
+    const data = await callApi("/advisory", ctx, k);
+    setBusy(false, `Done in ${((performance.now()-t0)/1000).toFixed(1)}s`);
+    renderAll(data);
+  } catch (e) {
+    setBusy(false, "");
+    $("err").textContent = e.message;
+  }
+}
+
+async function runOne() {
+  $("err").textContent = "";
+  const eng = $("singleEngine").value;
+  if (!eng) { $("err").textContent = "Pick an engine to run."; return; }
+  let ctx;
+  try { ctx = buildContext(); } catch (e) { $("err").textContent = e.message; return; }
+  const k = parseInt($("k").value, 10) || 1;
+  setBusy(true, `Running ${eng} (and any upstream engines it depends on)…`);
+  const t0 = performance.now();
+  try {
+    const data = await callApi(`/advisory/${eng}`, ctx, k);
+    setBusy(false, `Done in ${((performance.now()-t0)/1000).toFixed(1)}s`);
+    renderSingle(data);
+  } catch (e) {
+    setBusy(false, "");
+    $("err").textContent = e.message;
+  }
+}
+
+function setBusy(on, msg) {
+  $("goAll").disabled = on;
+  $("goOne").disabled = on;
+  $("status").innerHTML = on ? `<span class="spinner"></span>${esc(msg)}` : esc(msg || "");
+}
+
+async function checkHealth() {
+  try {
+    const r = await fetch(`${API}/health`);
+    if (r.ok) { $("healthText").textContent = "API online"; $("healthDot").style.background = "var(--ok)"; }
+    else throw 0;
+  } catch {
+    $("healthText").textContent = "API offline";
+    $("healthDot").style.background = "var(--err)";
+    $("healthDot").style.boxShadow = "0 0 10px var(--err)";
+  }
+}
+
+// ── Farm Mode ─────────────────────────────────────────────────────────────
+function sampleSat() {
+  return {
+    ndvi_timeseries: [{date:"2026-03-01",value:0.40},{date:"2026-04-20",value:0.62}],
+    evi_timeseries:  [{date:"2026-03-01",value:0.35},{date:"2026-04-20",value:0.55}],
+    ndwi_timeseries: [{date:"2026-03-01",value:0.10},{date:"2026-04-20",value:0.18}],
+  };
+}
+
+function resolveFarmId() {
+  const sel = $("farm_id_select").value;
+  return sel === "__custom" ? $("farm_id_custom").value.trim() : sel;
+}
+
+async function uploadSoilReport(file) {
+  // Two-step upload — same shape agri-integrated uses. Pre-fetched soil
+  // bypasses SoilGrids on the server.
+  const fd = new FormData();
+  fd.append("file", file);
+  const r = await fetch(`${API}/data/soil/upload`, { method:"POST", body: fd });
+  const j = await r.json();
+  if (!r.ok || j.error) throw new Error(j.message || `Soil upload HTTP ${r.status}`);
+  return j;
+}
+
+async function runFarm() {
+  $("farm_err").textContent = "";
+  const farm_id = resolveFarmId();
+  if (!farm_id) { $("farm_err").textContent = "Please pick or enter a farm ID"; return; }
+  const body = {
+    farm_id,
+    language: $("farm_lang").value,
+    k: parseInt($("farm_k").value, 10) || 1,
+  };
+  if ($("farm_current").value) body.current_date = $("farm_current").value;
+  if ($("farm_sat").checked) body.satellite_data = sampleSat();
+  const sm = $("farm_soil_moisture").value;
+  if (sm !== "") body.iot_soil_moisture_mm = parseFloat(sm);
+
+  setBusyFarm(true, "Fetching farm + weather + soil…");
+  const t0 = performance.now();
+  try {
+    const file = $("farm_soil_file").files[0];
+    if (file) {
+      setBusyFarm(true, "Uploading & OCRing soil report…");
+      try { body.pre_fetched_soil = await uploadSoilReport(file); }
+      catch (e) {
+        // Non-fatal — fall back to SoilGrids on the server.
+        $("farm_err").textContent = "Soil upload failed (using SoilGrids): " + e.message;
+      }
+    }
+    setBusyFarm(true, "Running 6-engine RAG pipeline…");
+    const r = await fetch(`${API}/farm-advisory`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(body),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || `HTTP ${r.status}`);
+    setBusyFarm(false, `Done in ${((performance.now()-t0)/1000).toFixed(1)}s`);
+    renderFarm(data);
+  } catch (e) {
+    setBusyFarm(false, "");
+    $("farm_err").textContent = e.message;
+  }
+}
+
+function renderFarm(data) {
+  const farm = data.farm || {};
+  const ctx = data.context || {};
+  const fe = data.fetch_errors;
+
+  let html = `<div class="meta-strip">
+    <span><b>Farm:</b> ${esc(farm.farm_id)} ${farm.farm_name ? "· "+esc(farm.farm_name) : ""}</span>
+    <span><b>Crop:</b> ${esc(farm.crop)}</span>
+    <span><b>Sown:</b> ${esc(farm.sowing_date)}</span>
+    <span><b>Today:</b> ${esc(ctx.current_date)}</span>
+    <span><b>DAS:</b> ${esc(ctx.days_after_sowing)}</span>
+    <span><b>Loc:</b> ${esc(farm.location && farm.location.district)}, ${esc(farm.location && farm.location.state)}</span>
+    <span><b>Loan:</b> ₹${esc(farm.outstanding_loan_amount ?? "—")}</span>
+    <span><b>₹/kg:</b> ${esc(farm.market_price_per_kg ?? "—")}</span>
+    ${fe ? `<span class="badge warn">fetch issues: ${esc(Object.keys(fe).join(", "))}</span>` : ""}
+  </div>`;
+
+  const lead = (data.stage && data.stage.summary) || (data.pest_disease_risk && data.pest_disease_risk.summary);
+  if (lead) html += `<div class="summary-card"><h2>Lead insight</h2><p>${esc(lead)}</p></div>`;
+
+  html += `<div class="engines">`;
+  for (const key of ENGINE_ORDER) html += renderEngineCard(key, data[key], false);
+  html += `</div>`;
+  $("results").innerHTML = html;
+  $("empty").style.display = "none";
+}
+
+function setBusyFarm(on, msg) {
+  $("goFarm").disabled = on;
+  $("farm_status").innerHTML = on ? `<span class="spinner"></span>${esc(msg)}` : esc(msg || "");
+}
+
+// ── wiring ────────────────────────────────────────────────────────────────
+$("crop").addEventListener("change", () => {
+  $("cropCustomWrap").style.display = $("crop").value === "__custom" ? "" : "none";
+});
+$("farm_id_select").addEventListener("change", () => {
+  $("farm_id_custom_wrap").style.display = $("farm_id_select").value === "__custom" ? "" : "none";
+});
+$("goFarm").addEventListener("click", runFarm);
+$("goAll").addEventListener("click", runAll);
+$("goOne").addEventListener("click", runOne);
+
+// Mode tab switching
+document.querySelectorAll(".modetab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".modetab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".modepane").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    $("pane-" + tab.dataset.mode).classList.add("active");
+    $("results").innerHTML = "";
+    $("empty").style.display = "block";
+  });
+});
+
+// Default dates — sowing 75 days ago, current today.
+(function defaults() {
+  const today = new Date();
+  const sow = new Date(today.getTime() - 75*24*3600*1000);
+  $("current").value = today.toISOString().slice(0,10);
+  $("sowing").value = sow.toISOString().slice(0,10);
+})();
+
+checkHealth();
+</script>
+</body>
+</html>

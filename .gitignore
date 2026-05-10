@@ -9,9 +9,6 @@ __pycache__/
 .claude/
 temp.txt
 
-# Dev-only frontend — not for client delivery
-frontend/
-
 # Test files
 test_*.csv
 test_*.json
